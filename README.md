@@ -48,6 +48,21 @@ These are common-sense rules based on average consumption: check the result afte
 
 ![Optimization](images/optimization.png)
 
+## Control tab (auto mode)
+
+An **Auto** button in the header and a **Control** tab drive the battery and charging during off-peak hours. The logic runs in Home Assistant (one automation and a few helpers); the card is the control panel, so it keeps working with the browser closed.
+
+- **Two adjustable off-peak windows** (the second one can be turned off).
+- **Battery charging when needed**: for each window, the need until the next window is estimated (average home consumption excluding EV minus weighted Solcast solar), turned into a target level (+ margin, capped), then the battery is charged from the grid up to that level (`huawei_solar.forcible_charge_soc`). A fixed target is also possible.
+- **Battery preserved** during off-peak hours: the home runs on cheap grid power and the battery is kept for peak hours.
+- **Battery protected while the EV charges**: discharge power is set to 0 W while the car charges, then restored.
+- **EV charging off-peak** (option): switches the charger to normal charging at the start of the window and back to PV preferred at the end.
+- While auto mode is on, the old off-peak charging automations are disabled; they are re-enabled when it is turned off.
+
+The helpers, template sensors and the automation are listed in the [French README](README.fr.md#onglet-pilotage-mode-auto); their names can be overridden under `entities:`. The control windows then replace the `offpeak` option. Without these entities the tab is hidden.
+
+![Control](images/pilotage.png)
+
 ## Summary tab
 
 Day, week, month or year, with ◀ ▶ navigation: production, consumption, self-consumption, self-sufficiency, grid purchase (€), export, battery, EV (solar share), heat pump, savings. Two bars show where production goes and where consumption comes from, plus a mirrored chart (above: where solar goes, below: where consumption comes from). The split is computed hour by hour from long-term statistics. Battery energy charged from the grid counts as grid in self-sufficiency.
@@ -87,7 +102,7 @@ type: custom:fusionsolar-mini-card
 navigation_path: /lovelace/energy   # optional
 ```
 
-Other options: `layout` (auto, wide, tall), `optimization_days` (7, 14, 30), `pv1_peak` / `pv2_peak` (W, glow intensity), `heatpump_min_power`, `grid_invert`, `battery_invert`, `show_header`, `show_stats`, `show_optimization`, `show_recap`, `language` (fr, en).
+Other options: `show_pilot`, `layout` (auto, wide, tall), `optimization_days` (7, 14, 30), `pv1_peak` / `pv2_peak` (W, glow intensity), `heatpump_min_power`, `grid_invert`, `battery_invert`, `show_header`, `show_stats`, `show_optimization`, `show_recap`, `language` (fr, en).
 
 ### Conventions and entities
 

@@ -11,7 +11,7 @@
  * Toutes les entités ont une valeur par défaut (ton installation) et peuvent être remplacées via `entities:`.
  */
 
-const FS_VERSION = "1.0.0";
+const FS_VERSION = "1.1.0";
 
 /* ------------------------------------------------------------------------------------------ */
 /*  Entités par défaut                                                                        */
@@ -61,6 +61,33 @@ const FS_DEFAULTS = {
   fossil: "sensor.electricity_maps_pourcentage_d_energies_fossiles_du_reseau",
   sun: "sun.sun",
   hc_toggle: "input_boolean.recharge_batterie_heures_creuses",
+  // Pilotage automatique (helpers et automatisation créés dans HA, voir README)
+  auto_mode: "input_boolean.fusionsolar_pilotage_auto",
+  pilot_state: "sensor.fusionsolar_pilotage_etat",
+  pilot_target: "sensor.fusionsolar_pilotage_cible",
+  pilot_need: "sensor.fusionsolar_pilotage_besoin",
+  pilot_in_hc: "binary_sensor.fusionsolar_pilotage_en_hc",
+  pilot_block: "binary_sensor.fusionsolar_pilotage_bloquer_decharge",
+  pilot_automation: "automation.fusionsolar_pilotage_auto_heures_creuses",
+  hc1_start: "input_datetime.fusionsolar_hc1_debut",
+  hc1_end: "input_datetime.fusionsolar_hc1_fin",
+  hc2_start: "input_datetime.fusionsolar_hc2_debut",
+  hc2_end: "input_datetime.fusionsolar_hc2_fin",
+  hc2_enabled: "input_boolean.fusionsolar_hc2_active",
+  opt_charge: "input_boolean.fusionsolar_charge_batterie_hc",
+  opt_preserve: "input_boolean.fusionsolar_preserver_batterie_hc",
+  opt_protect_ev: "input_boolean.fusionsolar_proteger_batterie_ve",
+  opt_ev_hc: "input_boolean.fusionsolar_recharge_ve_hc",
+  target_mode: "input_select.fusionsolar_cible_mode",
+  target_fixed: "input_number.fusionsolar_cible_fixe",
+  target_max: "input_number.fusionsolar_cible_max",
+  margin: "input_number.fusionsolar_marge",
+  charge_power: "input_number.fusionsolar_puissance_charge_reseau",
+  discharge_normal: "input_number.fusionsolar_puissance_decharge_normale",
+  conso_source: "input_select.fusionsolar_conso_source",
+  conso_day: "input_number.fusionsolar_conso_jour",
+  pv_factor: "input_number.fusionsolar_facteur_pv",
+  capacity: "input_number.fusionsolar_capacite_batterie",
   // Prévisions Solcast
   forecast_today: "sensor.solcast_pv_forecast_previsions_pour_aujourd_hui",
   forecast_tomorrow: "sensor.solcast_pv_forecast_previsions_pour_demain",
@@ -583,7 +610,49 @@ text{paint-order:stroke;stroke:#16191d;stroke-width:4px;stroke-linejoin:round;fo
 .split .sk b{color:#e6e9ee;font-weight:600}
 .vtip{position:absolute;pointer-events:none;background:#0d0f12;border:1px solid rgba(255,255,255,.14);color:#e6e9ee;font-size:12px;
   padding:6px 9px;border-radius:8px;white-space:pre;z-index:5;box-shadow:0 6px 20px rgba(0,0,0,.4);display:none;line-height:1.4}
-@container (max-width:720px){.ogrid{grid-template-columns:1fr}}
+@container (max-width:720px){.ogrid{grid-template-columns:1fr}.pgrid{grid-template-columns:1fr}}
+.tabs{max-width:100%;overflow-x:auto;scrollbar-width:none}
+.autob{display:none;align-items:center;gap:7px;font:600 12.5px inherit;font-family:inherit;padding:5px 12px 5px 10px;border-radius:999px;cursor:pointer;
+  background:transparent;color:#9aa3ad;border:1px dashed rgba(255,255,255,.22);transition:all .3s}
+.autob.show{display:inline-flex}.autob .dot{width:8px;height:8px;border-radius:50%;background:#5d6570}
+.autob[aria-pressed="true"]{color:#6fdc8c;border:1px solid rgba(111,220,140,.45);background:rgba(111,220,140,.1)}
+.autob[aria-pressed="true"] .dot{background:#6fdc8c;box-shadow:0 0 6px #6fdc8c}
+.autob:focus-visible{outline:2px solid #6fdc8c;outline-offset:2px}
+.pban{display:none;align-items:center;gap:10px;margin:2px 14px 6px;padding:9px 12px;border-radius:12px;cursor:pointer;font-size:13px;
+  background:color-mix(in srgb,var(--pc,#7d8794) 10%,transparent);border:1px solid color-mix(in srgb,var(--pc,#7d8794) 30%,transparent);color:#e6e9ee}
+.pban.show{display:flex}.pban .pdot{width:9px;height:9px;border-radius:50%;background:var(--pc);flex:none}
+.pban.live .pdot{animation:ping 1.8s ease-out infinite;--mc:var(--pc)}
+.pban #pban_t{flex:1;min-width:0}.pban .pgo{color:#9aa3ad;font-size:18px;line-height:1}
+.phead{display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:center;margin:4px 0 12px;padding:14px;border-radius:14px;
+  background:color-mix(in srgb,var(--pc,#7d8794) 8%,transparent);border:1px solid color-mix(in srgb,var(--pc,#7d8794) 28%,transparent)}
+.bigauto{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:96px;padding:12px 14px;border-radius:14px;cursor:pointer;font:600 13px inherit;font-family:inherit;
+  color:#c9d1da;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.12);transition:all .3s}
+.bigauto svg{width:30px;height:30px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.bigauto .bs{font-size:11.5px;font-weight:500;color:#9aa3ad}
+.bigauto[aria-pressed="true"]{color:#6fdc8c;background:rgba(111,220,140,.12);border-color:rgba(111,220,140,.5)}
+.bigauto[aria-pressed="true"] .bs{color:#6fdc8c}
+.bigauto:focus-visible{outline:2px solid #6fdc8c;outline-offset:2px}
+.pst .rh{color:var(--pc)}
+.pgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.pset{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:12px 14px;min-width:0}
+.pset h4{margin:0 0 8px;font-size:12px;letter-spacing:.7px;text-transform:uppercase;color:#9aa3ad;font-weight:600}
+.prow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:7px 0;border-top:1px solid rgba(255,255,255,.05);font-size:13px;color:#c9d1da;min-height:34px}
+.prow:first-of-type{border-top:0}
+.prow .pl{flex:1;min-width:0;line-height:1.3}
+.prow.dis{opacity:.45}
+.ptimes{display:flex;align-items:center;gap:6px;color:#7f8994}
+.pin{font:500 13px inherit;font-family:inherit;color:#e6e9ee;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:8px;padding:5px 8px;color-scheme:dark}
+.pin[type=number]{width:72px;text-align:right}.pin:focus{outline:2px solid #ffc531;outline-offset:1px}
+.punit{font-size:12px;color:#7f8994;min-width:22px}
+.pnum{display:flex;align-items:center;gap:5px}
+.sw{position:relative;width:40px;height:22px;border-radius:999px;border:0;cursor:pointer;background:rgba(255,255,255,.16);flex:none;transition:background .25s;padding:0}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#e6e9ee;transition:transform .25s}
+.sw[aria-checked="true"]{background:#3dbb78}.sw[aria-checked="true"]::after{transform:translateX(18px)}
+.sw:focus-visible{outline:2px solid #ffc531;outline-offset:2px}
+.pnote{font-size:11.5px;color:#7f8994;margin-top:2px;line-height:1.4}
+.phow{font-size:12.5px;color:#9aa3ad;line-height:1.5;margin-top:12px}
+@container (max-width:720px){.pgrid{grid-template-columns:1fr}}
+@container (max-width:420px){.phead{grid-template-columns:1fr}.bigauto{flex-direction:row;justify-content:center}.prow{flex-wrap:wrap}.prow:not(.psw) .pl{flex-basis:100%}.ptimes,.pnum,.prow select{margin-left:auto}}
 @container (max-width:420px){.opanel{padding:12px 10px 8px}.kpis{grid-template-columns:repeat(2,1fr)}.rec{grid-template-columns:1fr}.rec .ic{display:none}.nav .lab{min-width:90px}}
 .tall .hdr{padding:12px 12px 4px}.tall .tabs button{padding:6px 11px}
 @media (prefers-reduced-motion: reduce){*{animation-duration:0s!important;animation-iteration-count:1!important}}
@@ -595,7 +664,32 @@ text{paint-order:stroke;stroke:#16191d;stroke-width:4px;stroke-linejoin:round;fo
 const FS_I18N = {
   fr: {
     default_title: "FusionSolar", aria: "Flux d'énergie de l'installation solaire",
-    tab_flow: "Flux", tab_opt: "Optimisation", tab_rec: "Récap",
+    tab_flow: "Flux", tab_opt: "Optimisation", tab_rec: "Récap", tab_pil: "Pilotage",
+    r_bat_pilot: "Mode auto actif : il charge jusqu'à {c} % en heures creuses si besoin",
+    pil_missing: "Les entités du pilotage automatique sont introuvables dans Home Assistant (voir README, section Pilotage).",
+    pil_auto: "Mode auto", pil_on: "Activé", pil_off: "Désactivé",
+    pil_st: { off: "Mode auto désactivé", attente: "En attente des heures creuses", charge: "Charge de la batterie depuis le réseau",
+      ve: "VE en charge : batterie préservée", preserve: "Heures creuses : batterie préservée", hc: "Heures creuses : rien à faire" },
+    pil_d_off: "Active le mode auto pour gérer la batterie et la recharge en heures creuses. Tant qu'il est actif, les anciennes automatisations de charge HC sont désactivées.",
+    pil_d_attente: "Prochaine plage {a}–{b} · cible prévue {c} % (batterie {soc} %)",
+    pil_d_charge: "Jusqu'à {c} % à {p} · batterie {soc} % · fin de plage {b}",
+    pil_d_ve: "La maison et la voiture sont alimentées par le réseau, la batterie ne se décharge pas.",
+    pil_d_preserve: "La maison tourne sur le réseau (tarif creux) jusqu'à {b} ; la batterie ({soc} %) est gardée pour les heures pleines.",
+    pil_d_hc: "Batterie à {soc} %, cible {c} % atteinte · fin de plage {b}",
+    pil_auto_off_warn: "L'automatisation de pilotage est désactivée dans Home Assistant : le mode auto n'agit pas.",
+    pk_target: "Cible", pk_target_s: "besoin {k} kWh jusqu'à la prochaine plage", pk_soc: "Batterie", pk_win: "Plage", pk_win_cur: "en cours, fin {b}", pk_win_next: "prochaine",
+    pk_block: "Décharge", pk_block_on: "bloquée", pk_block_off: "autorisée",
+    ps_hc: "Heures creuses", ps_hc1: "Plage 1", ps_hc2: "Plage 2",
+    ps_bat: "Charge de la batterie", ps_charge: "Charger la batterie en heures creuses si nécessaire",
+    ps_mode: "Calcul de la cible", ps_modes: { "Prévision": "Selon prévision solaire", "Fixe": "Valeur fixe" },
+    ps_fixed: "Cible fixe", ps_max: "Cible maximale", ps_margin: "Marge de sécurité", ps_power: "Puissance de charge réseau",
+    ps_prot: "Protection de la batterie", ps_preserve: "Ne pas décharger la batterie pendant les heures creuses",
+    ps_protect_ev: "Ne pas décharger la batterie quand le véhicule charge", ps_dis: "Puissance de décharge normale",
+    ps_ev: "Véhicule", ps_ev_hc: "Lancer la recharge du véhicule au début des heures creuses",
+    ps_ev_note: "Laisse cette option coupée si d'autres automatisations gèrent déjà la recharge de nuit.",
+    ps_est: "Estimation de la consommation", ps_src: "Consommation de la maison", ps_srcs: { "Moyenne du mois": "Moyenne du mois (hors VE)", "Valeur fixe": "Valeur fixe" },
+    ps_day: "Consommation par jour", ps_pvf: "Part du solaire prévu prise en compte", ps_cap: "Capacité de la batterie",
+    ps_how: "Comment ça marche : à chaque plage creuse, le pilotage estime l'énergie dont la maison aura besoin jusqu'à la plage suivante (consommation moyenne moins le solaire prévu par Solcast), en déduit un niveau de batterie cible, puis force la charge depuis le réseau jusqu'à ce niveau. Pendant les heures creuses et pendant la charge du véhicule, la puissance de décharge est mise à 0 W pour garder la batterie ; elle est rétablie ensuite.",
     st_selfuse: "Autoconsommation", st_export: "Surplus injecté", st_mixed: "Solaire + réseau", st_battery: "Sur batterie",
     st_gridchg: "Charge batterie réseau", st_grid: "Réseau", st_idle: "Veille",
     inv_ok: "Raccordé", inv_standby: "Veille", inv_off: "Arrêt", inv_fault: "Défaut",
@@ -665,7 +759,32 @@ const FS_I18N = {
   },
   en: {
     default_title: "FusionSolar", aria: "Solar installation energy flow",
-    tab_flow: "Flow", tab_opt: "Optimization", tab_rec: "Summary",
+    tab_flow: "Flow", tab_opt: "Optimization", tab_rec: "Summary", tab_pil: "Control",
+    r_bat_pilot: "Auto mode on: it charges up to {c}% off-peak when needed",
+    pil_missing: "Auto control entities were not found in Home Assistant (see README, Control section).",
+    pil_auto: "Auto mode", pil_on: "On", pil_off: "Off",
+    pil_st: { off: "Auto mode off", attente: "Waiting for off-peak hours", charge: "Charging battery from the grid",
+      ve: "EV charging: battery protected", preserve: "Off-peak: battery preserved", hc: "Off-peak: nothing to do" },
+    pil_d_off: "Turn on auto mode to manage the battery and charging during off-peak hours. While it is on, the old off-peak charging automations are disabled.",
+    pil_d_attente: "Next window {a}–{b} · planned target {c}% (battery {soc}%)",
+    pil_d_charge: "Up to {c}% at {p} · battery {soc}% · window ends {b}",
+    pil_d_ve: "Home and car run on the grid, the battery does not discharge.",
+    pil_d_preserve: "The home runs on the grid (off-peak rate) until {b}; the battery ({soc}%) is kept for peak hours.",
+    pil_d_hc: "Battery at {soc}%, target {c}% reached · window ends {b}",
+    pil_auto_off_warn: "The control automation is disabled in Home Assistant: auto mode has no effect.",
+    pk_target: "Target", pk_target_s: "{k} kWh needed until the next window", pk_soc: "Battery", pk_win: "Window", pk_win_cur: "active, ends {b}", pk_win_next: "next",
+    pk_block: "Discharge", pk_block_on: "blocked", pk_block_off: "allowed",
+    ps_hc: "Off-peak hours", ps_hc1: "Window 1", ps_hc2: "Window 2",
+    ps_bat: "Battery charging", ps_charge: "Charge the battery off-peak when needed",
+    ps_mode: "Target calculation", ps_modes: { "Prévision": "From solar forecast", "Fixe": "Fixed value" },
+    ps_fixed: "Fixed target", ps_max: "Maximum target", ps_margin: "Safety margin", ps_power: "Grid charging power",
+    ps_prot: "Battery protection", ps_preserve: "Do not discharge the battery during off-peak hours",
+    ps_protect_ev: "Do not discharge the battery while the car charges", ps_dis: "Normal discharge power",
+    ps_ev: "Vehicle", ps_ev_hc: "Start car charging at the beginning of off-peak hours",
+    ps_ev_note: "Leave this off if your own night charging automations stay active.",
+    ps_est: "Consumption estimate", ps_src: "Home consumption", ps_srcs: { "Moyenne du mois": "Monthly average (excl. EV)", "Valeur fixe": "Fixed value" },
+    ps_day: "Consumption per day", ps_pvf: "Share of forecast solar counted", ps_cap: "Battery capacity",
+    ps_how: "How it works: for each off-peak window, the control estimates the energy the home will need until the next window (average consumption minus Solcast forecast solar), derives a battery target, then forces grid charging up to that level. During off-peak hours and while the car charges, discharge power is set to 0 W to keep the battery; it is restored afterwards.",
     st_selfuse: "Self-consumption", st_export: "Exporting surplus", st_mixed: "Solar + grid", st_battery: "On battery",
     st_gridchg: "Grid charging battery", st_grid: "Grid", st_idle: "Idle",
     inv_ok: "On-grid", inv_standby: "Standby", inv_off: "Off", inv_fault: "Fault",
@@ -756,7 +875,7 @@ class FusionSolarCard extends HTMLElement {
       show_optimization: true, show_recap: true, entities: {},
     }, config || {});
     this._map = null;
-    this._off = fsParseOffpeak(this._config.offpeak);
+    this._offCfg = fsParseOffpeak(this._config.offpeak);
     if (this.shadowRoot) { this._applyLayout(true); this._update(); }
   }
 
@@ -772,6 +891,19 @@ class FusionSolarCard extends HTMLElement {
   getCardSize() { return 9; }
   getGridOptions() { return { columns: 12, min_columns: 6 }; }
 
+  /* Heures creuses : plages du pilotage (helpers) si présentes, sinon option offpeak */
+  get _off() {
+    if (this._hass && this._eid("hc1_start")) {
+      const m = (k) => { const v = this._s(k); if (!v) return null; const [h, mi] = v.split(":").map(Number); return isFinite(h) ? h * 60 + (mi || 0) : null; };
+      const w = [];
+      const a = m("hc1_start"), b = m("hc1_end");
+      if (a != null && b != null && a !== b) w.push([a, b]);
+      if (!this._eid("hc2_enabled") || this._on("hc2_enabled")) { const c = m("hc2_start"), d = m("hc2_end"); if (c != null && d != null && c !== d) w.push([c, d]); }
+      if (w.length) return w;
+    }
+    return this._offCfg || [];
+  }
+
   _forcedLayout() { return this._config.layout === "wide" || this._config.layout === "tall" ? this._config.layout : null; }
 
   _build() {
@@ -782,16 +914,18 @@ class FusionSolarCard extends HTMLElement {
         <div class="hdr" id="hdr">
           <div class="hname"><div><div class="name" id="h_name"></div><div class="subt" id="h_sub"></div></div>
             <div class="tabs" id="tabs" role="tablist">
-              <button role="tab" data-tab="flow" id="tab_f"></button><button role="tab" data-tab="opt" id="tab_o"></button><button role="tab" data-tab="rec" id="tab_r"></button>
+              <button role="tab" data-tab="flow" id="tab_f"></button><button role="tab" data-tab="pil" id="tab_p"></button><button role="tab" data-tab="opt" id="tab_o"></button><button role="tab" data-tab="rec" id="tab_r"></button>
             </div></div>
           <div class="chips">
             <span class="badge bad" id="b_alarm"></span><span class="badge warn" id="b_evoff"></span>
             <span class="badge info" id="b_grid"></span><span class="badge warn" id="b_forced"></span>
+            <button class="autob" id="b_auto" aria-pressed="false"><span class="dot"></span><span id="b_auto_t">Auto</span></button>
             <span class="pill" id="h_state"><span class="dot"></span><span id="h_state_t">—</span></span>
           </div>
         </div>
         <div class="view" id="v_flow">
           <div class="wrap" id="svgwrap"></div>
+          <div class="pban" id="pban" data-tab="pil"><span class="pdot"></span><span id="pban_t"></span><span class="pgo">›</span></div>
           <div class="tiles" id="tiles">
             <div class="tile" data-e="pv_daily"><div class="tl" id="l_prod"></div><div class="tv" id="k_prod">—</div><div class="ts" id="k_prod_s"></div></div>
             <div class="tile" data-tab="rec"><div class="tl" id="l_self"></div><div class="tv" id="k_self">—</div><div class="ts" id="k_self_s"></div><div class="bar"><i id="k_self_b" style="background:${FS_COL.pv}"></i></div></div>
@@ -801,6 +935,7 @@ class FusionSolarCard extends HTMLElement {
             <div class="tile" data-e="forecast_tomorrow"><div class="tl" id="l_fc"></div><div class="tv" id="k_fc">—</div><div class="ts" id="k_fc_s"></div></div>
           </div>
         </div>
+        <div class="view pane" id="v_pil"><div id="p_body"></div></div>
         <div class="view pane" id="v_opt"><div class="obar" id="o_bar"></div><div id="o_body"></div></div>
         <div class="view pane" id="v_rec"><div class="obar" id="r_bar"></div><div id="r_body"></div></div>
         <div class="vtip" id="vtip"></div>
@@ -814,7 +949,9 @@ class FusionSolarCard extends HTMLElement {
 
     root.addEventListener("click", (ev) => {
       const path = ev.composedPath();
-      if (path.some((n) => n.id === "v_opt" || n.id === "v_rec")) return;
+      if (path.some((n) => n.id === "v_opt" || n.id === "v_rec" || n.id === "v_pil")) return;
+      if (path.some((n) => n.id === "b_auto")) { this._pilToggle(); return; }
+      if (path.some((n) => n.id === "pban")) { this._setTab("pil"); return; }
       const tabEl = path.find((n) => n.dataset && n.dataset.tab && n.classList && n.classList.contains("tile"));
       if (tabEl) { this._setTab(tabEl.dataset.tab); return; }
       const el = path.find((n) => n.dataset && n.dataset.e);
@@ -829,6 +966,7 @@ class FusionSolarCard extends HTMLElement {
       if (b) this._setTab(b.dataset.tab);
     });
     this._paneInit();
+    this._pilInit();
     const card = root.querySelector("ha-card");
     if (window.ResizeObserver) {
       this._ro = new ResizeObserver((ent) => {
@@ -866,16 +1004,19 @@ class FusionSolarCard extends HTMLElement {
     r.getElementById("tab_f").textContent = this._t("tab_flow");
     r.getElementById("tab_o").textContent = this._t("tab_opt");
     r.getElementById("tab_r").textContent = this._t("tab_rec");
+    r.getElementById("tab_p").textContent = this._t("tab_pil");
+    r.getElementById("tab_p").classList.toggle("hide", this._config.show_pilot === false || !this._hasPilot());
     r.getElementById("tab_o").classList.toggle("hide", this._config.show_optimization === false);
     r.getElementById("tab_r").classList.toggle("hide", this._config.show_recap === false);
-    const noTabs = this._config.show_optimization === false && this._config.show_recap === false;
+    const noTabs = this._config.show_optimization === false && this._config.show_recap === false && (this._config.show_pilot === false || !this._hasPilot());
     r.getElementById("tabs").style.display = noTabs ? "none" : "";
   }
 
   _setTab(tab, init) {
     if (tab === "opt" && this._config.show_optimization === false) tab = "flow";
     if (tab === "rec" && this._config.show_recap === false) tab = "flow";
-    if (!["flow", "opt", "rec"].includes(tab)) tab = "flow";
+    if (tab === "pil" && (this._config.show_pilot === false || !this._hasPilot())) tab = "flow";
+    if (!["flow", "pil", "opt", "rec"].includes(tab)) tab = "flow";
     this._tab = tab;
     if (!init) { try { localStorage.setItem(this._tabKey(), tab); } catch (e) { /* ignore */ } }
     const r = this.shadowRoot;
@@ -883,7 +1024,9 @@ class FusionSolarCard extends HTMLElement {
     r.getElementById("v_flow").classList.toggle("on", tab === "flow");
     r.getElementById("v_opt").classList.toggle("on", tab === "opt");
     r.getElementById("v_rec").classList.toggle("on", tab === "rec");
+    r.getElementById("v_pil").classList.toggle("on", tab === "pil");
     if (!this._hass) return;
+    if (tab === "pil") this._pilRender(true);
     if (tab === "opt") this._optShow();
     if (tab === "rec") this._recShow();
   }
@@ -1019,6 +1162,7 @@ class FusionSolarCard extends HTMLElement {
     if (!this._map) this._resolveAll();
     const F = this._flows();
     this._updHeader(F);
+    this._pilUpdate();
     this._updSvg(F);
     if (this._config.show_stats !== false) this._updTiles(F);
   }
@@ -1568,6 +1712,10 @@ const FsOptMixin = {
           if (cut != null && this._eid("battery_grid_cutoff_soc") && Math.abs(cut - P.target) > 2) R.act = { id: "cut", label: t("r_bat_act", { t: f(P.target, 0) }), cfm: t("r_bat_cfm", { f: f(cut, 0), t: f(P.target, 0) }), svc: ["number", "set_value", { entity_id: this._eid("battery_grid_cutoff_soc"), value: P.target }] };
         }
       }
+      if (this._hasPilot() && this._on("auto_mode")) {
+        delete R.act;
+        extra.unshift(t("r_bat_pilot", { c: f(this._n("pilot_target"), 0) }));
+      }
       R.foot = extra.join(" · ");
       recs.push(R);
     }
@@ -1978,7 +2126,199 @@ const FsRecMixin = {
   },
 };
 
-Object.assign(FusionSolarCard.prototype, FsPaneMixin, FsOptMixin, FsRecMixin);
+/* ------------------------------------------------------------------------------------------ */
+/*  Pilotage automatique (mode auto des heures creuses)                                       */
+/* ------------------------------------------------------------------------------------------ */
+const FS_PIL_COL = { off: "#7d8794", attente: "#9fd4ff", charge: "#ffb547", ve: "#4f9dff", preserve: "#3ddc84", hc: "#9fd4ff" };
+const FS_ROBOT = `<svg viewBox="0 0 24 24"><rect x="4" y="8" width="16" height="11" rx="3"/><path d="M12 8V5M9 13h.01M15 13h.01M9 16h6M2 12v3M22 12v3"/><circle cx="12" cy="4" r="1"/></svg>`;
+
+const FsPilotMixin = {
+  _hasPilot() { return !!(this._hass && this._eid("auto_mode")); },
+
+  _pilInit() {
+    const v = this.shadowRoot.getElementById("v_pil");
+    v.addEventListener("click", (ev) => {
+      const sw = ev.target.closest("[data-sw]");
+      if (sw) { this._pilCall("input_boolean", "toggle", sw.dataset.sw); return; }
+      if (ev.target.closest("[data-auto]")) { this._pilToggle(); return; }
+      const mi = ev.target.closest("[data-mi]");
+      if (mi) { const id = this._eid(mi.dataset.mi); if (id) this._moreInfo(id); }
+    });
+    v.addEventListener("change", (ev) => {
+      const el = ev.target;
+      const k = el.dataset && el.dataset.k;
+      if (!k) return;
+      if (el.type === "time") this._pilCall("input_datetime", "set_datetime", k, { time: `${el.value}:00` });
+      else if (el.tagName === "SELECT") this._pilCall("input_select", "select_option", k, { option: el.value });
+      else if (el.type === "number") {
+        const st = this._st(k), a = st ? st.attributes : {};
+        let val = parseFloat(el.value);
+        if (!isFinite(val)) return;
+        val = fsClamp(val, a.min ?? -Infinity, a.max ?? Infinity);
+        this._pilCall("input_number", "set_value", k, { value: val });
+      }
+    });
+  },
+
+  _pilCall(domain, service, key, data = {}) {
+    const id = this._eid(key);
+    if (!id || !this._hass) return;
+    this._hass.callService(domain, service, Object.assign({ entity_id: id }, data)).catch((e) => {
+      this._pilErr = String((e && e.message) || e);
+      this._pilRender(true);
+    });
+  },
+
+  _pilToggle() { this._pilCall("input_boolean", "toggle", "auto_mode"); },
+
+  _pilWin() {
+    const W = this._off;
+    if (!W.length) return {};
+    const now = Date.now(), d0 = fsDay0(now), inst = [];
+    for (let d = -1; d <= 2; d++) for (const [a, b] of W) {
+      const s = new Date(d0); s.setDate(s.getDate() + d); s.setMinutes(a);
+      const e = new Date(d0); e.setDate(e.getDate() + d + (b > a ? 0 : 1)); e.setMinutes(b);
+      inst.push([s.getTime(), e.getTime()]);
+    }
+    inst.sort((x, y) => x[0] - y[0]);
+    return { cur: inst.find(([s, e]) => s <= now && now < e), nxt: inst.find(([s]) => s > now) };
+  },
+
+  _pilStatus() {
+    const t = (k, v) => this._t(k, v), f = (v, d = 0) => this._f(v, d);
+    let st = this._s("pilot_state");
+    const auto = this._on("auto_mode");
+    if (!st) st = auto ? "attente" : "off";
+    const L = this._t("pil_st");
+    const { cur, nxt } = this._pilWin();
+    const soc = f(this._n("battery_soc")), c = f(this._n("pilot_target"));
+    const pw = this._n("charge_power");
+    let d = "";
+    if (st === "off") d = t("pil_d_off");
+    else if (st === "attente") d = nxt ? t("pil_d_attente", { a: this._hm(nxt[0]), b: this._hm(nxt[1]), c, soc }) : "";
+    else if (st === "charge") d = t("pil_d_charge", { c, p: this._W(pw), soc, b: cur ? this._hm(cur[1]) : "—" });
+    else if (st === "ve") d = t("pil_d_ve");
+    else if (st === "preserve") d = t("pil_d_preserve", { soc, b: cur ? this._hm(cur[1]) : "—" });
+    else if (st === "hc") d = t("pil_d_hc", { soc, c, b: cur ? this._hm(cur[1]) : "—" });
+    return { st, auto, label: (L && L[st]) || st, detail: d, col: FS_PIL_COL[st] || FS_COL.idle, live: ["charge", "ve", "preserve"].includes(st) };
+  },
+
+  /* bouton d'en-tête, bandeau du schéma, contenu de l'onglet */
+  _pilUpdate() {
+    const r = this.shadowRoot;
+    if (!r) return;
+    const has = this._hasPilot() && this._config.show_pilot !== false;
+    const btn = r.getElementById("b_auto"), ban = r.getElementById("pban");
+    if (btn) btn.classList.toggle("show", has);
+    if (ban) ban.classList.toggle("show", has);
+    const tp = r.getElementById("tab_p");
+    if (tp) tp.classList.toggle("hide", !has);
+    if (!has) return;
+    const S = this._pilStatus();
+    btn.setAttribute("aria-pressed", String(S.auto));
+    btn.title = `${this._t("pil_auto")} : ${this._t(S.auto ? "pil_on" : "pil_off")}`;
+    ban.style.setProperty("--pc", S.col);
+    ban.classList.toggle("live", S.live);
+    const txt = S.st === "off" ? `${this._t("pil_auto")} : ${this._t("pil_off")}` : `${S.label}${S.detail ? ` · ${S.detail}` : ""}`;
+    const bt = r.getElementById("pban_t");
+    if (bt.textContent !== txt) bt.textContent = txt;
+    if (this._tab === "pil") this._pilRender(false);
+  },
+
+  _pilRender(full) {
+    const el = this.shadowRoot && this.shadowRoot.getElementById("p_body");
+    if (!el || !this._hass) return;
+    const t = (k, v) => this._t(k, v);
+    if (!this._hasPilot()) { el.innerHTML = `<div class="onote">${t("pil_missing")}</div>`; this._pilBuilt = false; return; }
+    if (full || !this._pilBuilt) { el.innerHTML = this._pilHtml(); this._pilBuilt = true; }
+    this._pilValues(el);
+  },
+
+  _pilHtml() {
+    const t = (k, v) => this._t(k, v);
+    const has = (k) => !!this._eid(k);
+    const sw = (k, label, note) => has(k) ? `<div class="prow psw" data-row="${k}"><div class="pl">${label}${note ? `<div class="pnote">${note}</div>` : ""}</div><button class="sw" role="switch" data-sw="${k}" aria-label="${fsEsc(label)}"></button></div>` : "";
+    const num = (k, label) => {
+      if (!has(k)) return "";
+      const a = this._st(k).attributes;
+      return `<div class="prow" data-row="${k}"><div class="pl">${label}</div><div class="pnum"><input class="pin" type="number" data-k="${k}" min="${a.min}" max="${a.max}" step="${a.step || 1}" aria-label="${fsEsc(label)}"><span class="punit">${fsEsc(a.unit_of_measurement || "")}</span></div></div>`;
+    };
+    const sel = (k, label, names) => {
+      if (!has(k)) return "";
+      const opts = this._st(k).attributes.options || [];
+      return `<div class="prow" data-row="${k}"><div class="pl">${label}</div><select class="pin" data-k="${k}" aria-label="${fsEsc(label)}">${opts.map((o) => `<option value="${fsEsc(o)}">${fsEsc((names && names[o]) || o)}</option>`).join("")}</select></div>`;
+    };
+    const win = (a, b, label, swk) => (has(a) && has(b) ? `<div class="prow" data-row="${a}"><div class="pl">${label}</div><div class="ptimes">${swk && has(swk) ? `<button class="sw" role="switch" data-sw="${swk}" aria-label="${fsEsc(label)}"></button>` : ""}<input class="pin" type="time" data-k="${a}" aria-label="${fsEsc(label)}"><span>→</span><input class="pin" type="time" data-k="${b}" aria-label="${fsEsc(label)}"></div></div>` : "");
+    const kp = (id, l) => `<div class="kpi"><div class="tl">${l}</div><div class="tv" id="${id}">—</div><div class="ts" id="${id}_s"></div></div>`;
+    return `
+      <div class="phead" id="p_head">
+        <button class="bigauto" data-auto aria-pressed="false">${FS_ROBOT}<span>${t("pil_auto")}</span><span class="bs" id="p_auto_s"></span></button>
+        <div class="pst"><div class="rh" id="p_label"></div><div class="rt" id="p_detail" style="margin-top:4px"></div><div class="omsg err" id="p_err"></div></div>
+      </div>
+      <div class="kpis">${kp("p_k_target", t("pk_target"))}${kp("p_k_soc", t("pk_soc"))}${kp("p_k_win", t("pk_win"))}${kp("p_k_block", t("pk_block"))}</div>
+      <div class="pgrid">
+        <div class="pset"><h4>${t("ps_hc")}</h4>${win("hc1_start", "hc1_end", t("ps_hc1"))}${win("hc2_start", "hc2_end", t("ps_hc2"), "hc2_enabled")}</div>
+        <div class="pset"><h4>${t("ps_prot")}</h4>${sw("opt_preserve", t("ps_preserve"))}${sw("opt_protect_ev", t("ps_protect_ev"))}${num("discharge_normal", t("ps_dis"))}</div>
+        <div class="pset"><h4>${t("ps_bat")}</h4>${sw("opt_charge", t("ps_charge"))}${sel("target_mode", t("ps_mode"), t("ps_modes"))}${num("target_fixed", t("ps_fixed"))}${num("target_max", t("ps_max"))}${num("margin", t("ps_margin"))}${num("charge_power", t("ps_power"))}</div>
+        <div class="pset"><h4>${t("ps_est")}</h4>${sel("conso_source", t("ps_src"), t("ps_srcs"))}${num("conso_day", t("ps_day"))}${num("pv_factor", t("ps_pvf"))}${num("capacity", t("ps_cap"))}</div>
+        <div class="pset"><h4>${t("ps_ev")}</h4>${sw("opt_ev_hc", t("ps_ev_hc"), t("ps_ev_note"))}</div>
+      </div>
+      <div class="phow">${t("ps_how")}</div>`;
+  },
+
+  _pilValues(el) {
+    const t = (k, v) => this._t(k, v), f = (v, d = 0) => this._f(v, d);
+    const active = this.shadowRoot.activeElement;
+    const S = this._pilStatus();
+    const head = el.querySelector("#p_head");
+    if (head) head.style.setProperty("--pc", S.col);
+    const set = (id, v) => { const n = el.querySelector("#" + id); if (n && n.textContent !== v) n.textContent = v; };
+    const setH = (id, v) => { const n = el.querySelector("#" + id); if (n && n.innerHTML !== v) n.innerHTML = v; };
+    const big = el.querySelector("[data-auto]");
+    if (big) big.setAttribute("aria-pressed", String(S.auto));
+    set("p_auto_s", t(S.auto ? "pil_on" : "pil_off"));
+    set("p_label", S.label);
+    let det = S.detail;
+    const au = this._st("pilot_automation");
+    if (S.auto && au && au.state === "off") det = `${t("pil_auto_off_warn")} ${det}`;
+    set("p_detail", det);
+    set("p_err", this._pilErr || "");
+    const tgt = this._n("pilot_target"), need = this._n("pilot_need"), soc = this._n("battery_soc");
+    setH("p_k_target", tgt != null ? `${f(tgt)}<small>%</small>` : "—");
+    set("p_k_target_s", need != null ? t("pk_target_s", { k: f(need, 1) }) : "");
+    setH("p_k_soc", soc != null ? `${f(soc)}<small>%</small>` : "—");
+    const bp = this._pw("battery_power");
+    set("p_k_soc_s", bp != null && Math.abs(bp) > 15 ? `${this._W(bp, true)} · ${t(bp > 0 ? "charge" : "discharge")}` : t("rest"));
+    const { cur, nxt } = this._pilWin();
+    const w = cur || nxt;
+    setH("p_k_win", w ? `${this._hm(w[0])}–${this._hm(w[1])}` : "—");
+    set("p_k_win_s", cur ? t("pk_win_cur", { b: this._hm(cur[1]) }) : nxt ? t("pk_win_next") : "");
+    const blk = this._s("pilot_block") === "on";
+    setH("p_k_block", t(blk ? "pk_block_on" : "pk_block_off"));
+    set("p_k_block_s", blk ? (this._on("pilot_in_hc") ? t("ps_hc") : t("ps_ev")) : "");
+    // interrupteurs
+    el.querySelectorAll("[data-sw]").forEach((b) => b.setAttribute("aria-checked", String(this._on(b.dataset.sw))));
+    // champs
+    el.querySelectorAll("[data-k]").forEach((inp) => {
+      if (inp === active) return;
+      const v = this._s(inp.dataset.k);
+      if (v == null) return;
+      let val = v;
+      if (inp.type === "time") val = v.slice(0, 5);
+      else if (inp.type === "number") val = String(parseFloat(v));
+      if (inp.value !== val) inp.value = val;
+    });
+    // lignes inutiles grisées
+    const fixed = this._s("target_mode") === "Fixe";
+    const dim = (k, on) => { const row = el.querySelector(`[data-row="${k}"]`); if (row) row.classList.toggle("dis", on); };
+    dim("target_fixed", !fixed); dim("margin", fixed);
+    dim("conso_day", this._s("conso_source") !== "Valeur fixe");
+    const hc2 = el.querySelector('[data-row="hc2_start"]');
+    if (hc2) hc2.querySelectorAll("input").forEach((i) => { i.disabled = this._eid("hc2_enabled") ? !this._on("hc2_enabled") : false; });
+  },
+};
+
+Object.assign(FusionSolarCard.prototype, FsPaneMixin, FsOptMixin, FsRecMixin, FsPilotMixin);
 
 /* ------------------------------------------------------------------------------------------ */
 /*  Version smartphone : schéma portrait, onglets et graphiques sur une colonne               */

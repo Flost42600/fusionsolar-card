@@ -47,6 +47,21 @@ Ce sont des règles de bon sens sur une consommation moyenne : vérifie après c
 
 ![Optimisation](images/optimization.png)
 
+## Onglet Pilotage (mode auto)
+
+Un bouton **Auto** dans l'en-tête et un onglet **Pilotage** pilotent la batterie et la recharge en heures creuses. La logique tourne dans Home Assistant (une automatisation et quelques entrées), la carte sert de tableau de commande : elle fonctionne même navigateur fermé.
+
+- **Deux plages d'heures creuses** réglables (la seconde peut être coupée).
+- **Charge de la batterie si nécessaire** : à chaque plage, le besoin est estimé jusqu'à la plage suivante (consommation moyenne de la maison hors VE moins le solaire Solcast, pondéré), converti en niveau cible (+ marge, plafonné), puis la batterie est chargée depuis le réseau jusqu'à ce niveau (`huawei_solar.forcible_charge_soc`). Cible fixe possible.
+- **Batterie préservée** pendant les heures creuses : la maison tourne sur le réseau au tarif creux, la batterie est gardée pour les heures pleines.
+- **Batterie protégée pendant la charge du VE** : la puissance de décharge passe à 0 W tant que la voiture charge, puis elle est rétablie.
+- **Recharge du VE en heures creuses** (option) : passe la borne en charge normale au début de la plage et la remet en solaire prioritaire à la fin.
+- Quand le mode auto est actif, les anciennes automatisations de charge HC sont désactivées ; elles sont réactivées à l'arrêt.
+
+Entités utilisées (créées dans HA, noms modifiables sous `entities:`) : `input_boolean.fusionsolar_pilotage_auto`, `input_datetime.fusionsolar_hc1_debut|fin`, `input_datetime.fusionsolar_hc2_debut|fin`, `input_boolean.fusionsolar_hc2_active`, `input_boolean.fusionsolar_charge_batterie_hc`, `input_boolean.fusionsolar_preserver_batterie_hc`, `input_boolean.fusionsolar_proteger_batterie_ve`, `input_boolean.fusionsolar_recharge_ve_hc`, `input_select.fusionsolar_cible_mode`, `input_select.fusionsolar_conso_source`, `input_number.fusionsolar_cible_fixe|cible_max|marge|puissance_charge_reseau|puissance_decharge_normale|conso_jour|facteur_pv|capacite_batterie`, capteurs template `sensor.fusionsolar_pilotage_besoin|cible|etat`, `binary_sensor.fusionsolar_pilotage_en_hc|ve_en_charge|bloquer_decharge` et l'automatisation `automation.fusionsolar_pilotage_auto_heures_creuses`. Les plages du pilotage remplacent alors l'option `offpeak`. Sans ces entités, l'onglet est masqué.
+
+![Pilotage](images/pilotage.png)
+
 ## Onglet Récap
 
 Jour, semaine, mois ou année, avec navigation ◀ ▶ : production, consommation, autoconsommation, autosuffisance, achat réseau (€), injection, batterie, VE (part solaire), PAC, économie. Deux barres « Où va la production » / « D'où vient la consommation », et un graphique miroir (au-dessus la destination du solaire, en dessous l'origine de la consommation). La répartition se fait heure par heure depuis les statistiques long terme. L'énergie de batterie chargée depuis le réseau compte comme du réseau dans l'autosuffisance.
@@ -86,7 +101,7 @@ type: custom:fusionsolar-mini-card
 navigation_path: /lovelace/energie   # optionnel
 ```
 
-Autres options : `layout` (auto, wide, tall), `optimization_days` (7, 14, 30), `pv1_peak` / `pv2_peak` (W, intensité du halo), `heatpump_min_power`, `grid_invert`, `battery_invert`, `show_header`, `show_stats`, `show_optimization`, `show_recap`, `language` (fr, en).
+Autres options : `show_pilot`, `layout` (auto, wide, tall), `optimization_days` (7, 14, 30), `pv1_peak` / `pv2_peak` (W, intensité du halo), `heatpump_min_power`, `grid_invert`, `battery_invert`, `show_header`, `show_stats`, `show_optimization`, `show_recap`, `language` (fr, en).
 
 ### Conventions et entités
 

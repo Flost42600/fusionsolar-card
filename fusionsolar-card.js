@@ -11,7 +11,7 @@
  * Toutes les entités ont une valeur par défaut (ton installation) et peuvent être remplacées via `entities:`.
  */
 
-const FS_VERSION = "1.2.0";
+const FS_VERSION = "1.3.0";
 
 /* ------------------------------------------------------------------------------------------ */
 /*  Entités par défaut                                                                        */
@@ -70,6 +70,11 @@ const FS_DEFAULTS = {
   pilot_block: "binary_sensor.fusionsolar_pilotage_bloquer_decharge",
   pilot_limit: "sensor.fusionsolar_pilotage_limite_decharge",
   pilot_automation: "automation.fusionsolar_pilotage_auto_heures_creuses",
+  pilot_guard: "automation.fusionsolar_garde_fou_pilotage",
+  pilot_start: "sensor.fusionsolar_pilotage_debut_plage",
+  pilot_end: "sensor.fusionsolar_pilotage_fin_plage",
+  pilot_ev: "binary_sensor.fusionsolar_pilotage_ve_en_charge",
+  conso_month: "sensor.maison_hors_ve_mois",
   hc1_start: "input_datetime.fusionsolar_hc1_debut",
   hc1_end: "input_datetime.fusionsolar_hc1_fin",
   hc2_start: "input_datetime.fusionsolar_hc2_debut",
@@ -78,7 +83,9 @@ const FS_DEFAULTS = {
   opt_charge: "input_boolean.fusionsolar_charge_batterie_hc",
   opt_preserve: "input_boolean.fusionsolar_preserver_batterie_hc",
   opt_protect_ev: "input_boolean.fusionsolar_proteger_batterie_ve",
-  opt_ev_hc: "input_boolean.fusionsolar_recharge_ve_hc",
+  charge_min: "input_number.fusionsolar_charge_minimum",
+  late_charge: "input_boolean.fusionsolar_charge_en_fin_de_plage",
+  ev_scope: "input_select.fusionsolar_protection_ve_portee",
   target_mode: "input_select.fusionsolar_cible_mode",
   target_fixed: "input_number.fusionsolar_cible_fixe",
   target_max: "input_number.fusionsolar_cible_max",
@@ -652,6 +659,26 @@ text{paint-order:stroke;stroke:#16191d;stroke-width:4px;stroke-linejoin:round;fo
 .sw:focus-visible{outline:2px solid #ffc531;outline-offset:2px}
 .pnote{font-size:11.5px;color:#7f8994;margin-top:2px;line-height:1.4}
 .phow{font-size:12.5px;color:#9aa3ad;line-height:1.5;margin-top:12px}
+.nhead{grid-template-columns:auto 1fr}
+.nnow{display:flex;align-items:center;gap:8px;font-size:11.5px;letter-spacing:.7px;text-transform:uppercase;color:#9aa3ad;font-weight:600;min-width:96px}
+.nnow .pdot{width:10px;height:10px;border-radius:50%;background:var(--pc);flex:none}
+.nnow .pdot.live{animation:ping 1.8s ease-out infinite;--mc:var(--pc)}
+.nwarn{font-size:12.5px;color:#ffb547;margin-top:6px;line-height:1.4}
+.nplan .rv{font-size:17px}
+.nwhy{margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,.07)}
+.nwh{font-size:11.5px;letter-spacing:.7px;text-transform:uppercase;color:#9aa3ad;font-weight:600;margin-bottom:4px}
+.nwhy ol{margin:0;padding-left:20px;font-size:12.5px;color:#c9d1da;line-height:1.5}.nwhy li{margin:3px 0}
+.nnext{margin-bottom:12px;overflow-x:auto}
+.ntab{width:100%;border-collapse:collapse;font-size:12.5px;color:#c9d1da}
+.ntab th{text-align:right;font-weight:600;color:#7f8994;font-size:11.5px;padding:4px 6px}.ntab th:first-child,.ntab td:first-child{text-align:left}
+.ntab td{text-align:right;padding:6px;border-top:1px solid rgba(255,255,255,.05);white-space:nowrap}
+.ncols{grid-template-columns:1fr 1fr}
+.nsec{margin:6px 0 0;padding-left:18px;font-size:12.5px;color:#aeb7c1;line-height:1.45}.nsec li{margin:3px 0}
+.nlog ul{list-style:none;margin:0;padding:0;font-size:12.5px;color:#c9d1da}
+.nlog li{display:grid;grid-template-columns:110px 1fr;gap:10px;padding:6px 0;border-top:1px solid rgba(255,255,255,.05);line-height:1.4}
+.nlog li:first-child{border-top:0}.nlog .nt{color:#7f8994;white-space:nowrap}
+@container (max-width:480px){.ntab .nc{display:none}.ntab th,.ntab td{padding:5px 4px}}
+@container (max-width:560px){.ncols{grid-template-columns:1fr}.nlog li{grid-template-columns:1fr;gap:2px}.nhead{grid-template-columns:1fr}}
 @container (max-width:720px){.pgrid{grid-template-columns:1fr}}
 @container (max-width:420px){.phead{grid-template-columns:1fr}.bigauto{flex-direction:row;justify-content:center}.prow{flex-wrap:wrap}.prow:not(.psw) .pl{flex-basis:100%}.ptimes,.pnum,.prow select{margin-left:auto}}
 @container (max-width:420px){.opanel{padding:12px 10px 8px}.kpis{grid-template-columns:repeat(2,1fr)}.rec{grid-template-columns:1fr}.rec .ic{display:none}.nav .lab{min-width:90px}}
@@ -673,6 +700,9 @@ const FS_I18N = {
       ve: "VE en charge : la batterie alimente la maison seule", preserve: "Heures creuses : batterie gardée pour la suite", hc: "Heures creuses : la batterie suffit" },
     pil_d_off: "Active le mode auto pour gérer la batterie et la recharge en heures creuses. Tant qu'il est actif, les anciennes automatisations de charge HC sont désactivées.",
     pil_d_attente: "Prochaine plage {a}–{b} · cible prévue {c} % (batterie {soc} %)",
+    pil_d_att_charge: "Plage {d} {a}–{b} : charge prévue jusqu'à {c} % (≈ {k} kWh) vers {s}",
+    pil_d_att_enough: "Plage {d} {a}–{b} : pas de charge, la batterie suffit (besoin {c} %)",
+    pil_d_att_small: "Plage {d} {a}–{b} : pas de charge, il ne manquerait que {k} kWh",
     pil_d_charge: "Jusqu'à {c} % à {p} · batterie {soc} % · fin de plage {b}",
     pil_d_ve: "Décharge limitée à {w}, soit la consommation de la maison : la voiture charge sur le réseau, la maison reste sur la batterie.",
     pil_d_preserve: "Batterie ({soc} %) au niveau nécessaire jusqu'à la prochaine plage ({c} %) : la maison passe sur le réseau au tarif creux jusqu'à {b}.",
@@ -686,11 +716,62 @@ const FS_I18N = {
     ps_fixed: "Cible fixe", ps_max: "Cible maximale", ps_margin: "Marge de sécurité", ps_power: "Puissance de charge réseau",
     ps_prot: "Protection de la batterie", ps_preserve: "En heures creuses, garder la batterie dès qu'elle descend au niveau nécessaire pour la suite",
     ps_protect_ev: "Quand le véhicule charge, la batterie alimente la maison mais pas la voiture", ps_dis: "Puissance de décharge normale",
-    ps_ev: "Véhicule", ps_ev_hc: "Lancer la recharge du véhicule au début des heures creuses",
-    ps_ev_note: "Laisse cette option coupée si d'autres automatisations gèrent déjà la recharge de nuit.",
+    ps_scope: "Protection active", ps_scopes: { "Heures creuses": "En heures creuses", "Toujours": "Toujours" },
+    ps_min: "Charge minimale (en dessous, pas de charge)", ps_late: "Charger en fin de plage",
+    ps_late_note: "La charge démarre juste assez tôt pour finir à la fin des heures creuses (moins de temps batterie pleine, le solaire du matin compte encore).",
+    tab_plan: "Plan",
+    pl_now: "Maintenant", pl_off_note: "Mode auto désactivé : rien n'est piloté. Voici ce que je ferais s'il était actif.",
+    pl_auto_off_warn: "L'automatisation de pilotage est désactivée : le garde-fou coupe le mode auto.",
+    pl_tonight: "cette nuit", pl_today: "aujourd'hui", pl_tomorrow: "demain", pl_cur: "en cours",
+    pl_win: "Plage {d} {a} – {b}",
+    pl_h_charging: "Charge en cours jusqu'à {c} %",
+    pl_h_charge: "Je charge la batterie à {c} % depuis le réseau",
+    pl_h_enough: "Pas de charge : la batterie suffit",
+    pl_h_small: "Pas de charge : il ne manque que {k} kWh",
+    pl_h_disabled: "Pas de charge réseau (option désactivée)",
+    pl_t_charging: "Batterie à {soc} %. Arrêt dès {c} %, et au plus tard à {e} : la charge a été lancée pour une durée qui se termine à la fin des heures creuses, l'onduleur la coupe de lui-même.",
+    pl_t_charge: "≈ {k} kWh à {p}, soit environ {d}. Départ vers {s} pour finir vers {e2}. Arrêt dès {c} %, et au plus tard à {e}, fin des heures creuses.",
+    pl_t_charge_early: "≈ {k} kWh à {p}, soit environ {d}, dès {s}. Arrêt dès {c} %, et au plus tard à {e}, fin des heures creuses.",
+    pl_t_grid_win: "Pendant la plage, la maison est alimentée par le réseau au tarif creux.",
+    pl_t_enough: "Batterie estimée à {s0} % au début de la plage, au-dessus des {c} % nécessaires.",
+    pl_t_allbat: "Elle alimente la maison pendant toute la plage : aucun achat au réseau.",
+    pl_t_hold: "Elle alimente la maison jusqu'à {c} % (vers {h}), puis je la garde à ce niveau : la maison passe sur le réseau au tarif creux jusqu'à {e} (≈ {g} kWh).",
+    pl_t_nohold: "Elle alimente la maison, même sous ce niveau (option « garder la batterie » coupée).",
+    pl_t_small: "Il faudrait {k} kWh pour atteindre {c} %, moins que le seuil de {m} kWh : je ne lance pas de charge pour si peu.",
+    pl_t_small_hold: "Batterie gardée à son niveau pendant la plage : la maison passe sur le réseau au tarif creux.",
+    pl_t_disabled: "La batterie n'atteindrait que ≈ {s0} % pour {c} % nécessaires. Active « Charger la batterie en heures creuses » dans Pilotage si tu veux que je complète.",
+    pl_why: "Pourquoi",
+    pl_w_load: "De {e} à la plage suivante ({n}), soit {h} h, la maison consommera ≈ {l} kWh ({c} kWh/jour, {src}).",
+    pl_src_month: "moyenne du mois hors voiture", pl_src_fixed: "valeur réglée",
+    pl_w_pv: "Solcast prévoit {p} kWh de solaire sur cette période ; j'en compte {k} % → {pk} kWh.",
+    pl_w_credit: "Le surplus solaire attendu d'ici la fin de la plage ajoute ≈ {x} kWh.",
+    pl_w_need: "Reste ≈ {b} kWh à fournir par la batterie.",
+    pl_w_noneed: "Le solaire devrait couvrir la consommation : pas de réserve à prévoir au-delà du minimum.",
+    pl_w_tgt: "Niveau nécessaire en fin de plage : {fin} % de réserve + {x} % ({b} kWh sur {cap} kWh) + {m} % de marge = {raw} %, arrondi aux 5 % supérieurs : {c} %{cap2}.",
+    pl_w_tgt_cap: " (plafonné à {max} %)",
+    pl_w_tgt_min: "Niveau nécessaire : la réserve de fin de décharge, {c} %.",
+    pl_w_tgt_fixed: "Cible fixe réglée à {c} %.",
+    pl_w_soc_cur: "Batterie actuellement à {soc} %.",
+    pl_w_soc: "Batterie à {soc} % maintenant, estimée à ≈ {s0} % au début de la plage (consommation moyenne moins solaire prévu d'ici là). Ce plan est recalculé en continu : la décision se prend avec le niveau réel pendant la plage.",
+    pl_w_miss: "Il manque ≈ {m} kWh ({s0} % → {c} %), au-dessus du seuil de {min} kWh : la charge est utile.",
+    pl_next: "Plages suivantes (estimation)", pl_c_win: "Plage", pl_c_load: "Conso", pl_c_pv: "Solaire", pl_c_need: "Besoin", pl_c_tgt: "Niveau",
+    pl_ev_h: "Voiture", pl_ev_v: "Je ne pilote pas la borne",
+    pl_ev_t: "Si la voiture charge {scope}, je limite la décharge de la batterie à la consommation de la maison (arrondie aux 250 W supérieurs) : la voiture prend le réseau, la batterie ne se vide pas pour elle.",
+    pl_ev_hc: "en heures creuses", pl_ev_all: "à n'importe quelle heure",
+    pl_ev_off: "Protection coupée : si la voiture charge, la batterie peut aussi l'alimenter.",
+    pl_ev_now: "En ce moment : voiture en charge, décharge limitée à {w}.",
+    pl_ev_now_out: "En ce moment : voiture en charge, hors heures creuses : pas de limitation (portée « En heures creuses »).",
+    pl_sec_h: "Sécurités",
+    pl_sec: ["La charge réseau n'a lieu que pendant une plage d'heures creuses. Elle est lancée pour une durée qui se termine à la fin de la plage : l'onduleur l'arrête de lui-même, même si Home Assistant ne répond plus.",
+      "Elle s'arrête dès que la batterie atteint le niveau visé.",
+      "Couper le mode auto arrête aussitôt toute charge forcée et rétablit la décharge normale.",
+      "Garde-fou : une charge forcée détectée hors heures creuses est arrêtée ; si l'automatisation de pilotage est désactivée, le mode auto est coupé et tout est remis à la normale."],
+    pl_sec_st: "Automatisation : {a} · Garde-fou : {g} · Charge forcée : {c}",
+    pl_active: "active", pl_inactive: "désactivée", pl_missing: "absente", pl_stopped: "arrêtée",
+    pl_log: "Journal (48 h)", pl_log_empty: "Aucune action du pilotage ces dernières 48 h.",
     ps_est: "Estimation de la consommation", ps_src: "Consommation de la maison", ps_srcs: { "Moyenne du mois": "Moyenne du mois (hors VE)", "Valeur fixe": "Valeur fixe" },
     ps_day: "Consommation par jour", ps_pvf: "Part du solaire prévu prise en compte", ps_cap: "Capacité de la batterie",
-    ps_how: "Comment ça marche : à chaque plage creuse, le pilotage estime l'énergie dont la maison aura besoin entre la fin de la plage et la plage suivante (consommation moyenne moins le solaire prévu par Solcast) et en déduit le niveau de batterie nécessaire. Si la batterie est au-dessus, elle alimente la maison normalement : aucun achat au réseau. Elle ne passe la main au réseau (tarif creux) qu'une fois descendue à ce niveau, et n'est chargée depuis le réseau que si elle est en dessous. Quand le véhicule charge, la décharge est limitée à la consommation de la maison : la voiture prend le réseau, la maison reste sur la batterie.",
+    ps_how: "Comment ça marche : à chaque plage creuse, le pilotage estime l'énergie dont la maison aura besoin entre la fin de la plage et la plage suivante (consommation moyenne moins le solaire prévu par Solcast) et en déduit le niveau de batterie nécessaire. Si la batterie est au-dessus, elle alimente la maison normalement : aucun achat au réseau. Elle ne passe la main au réseau (tarif creux) qu'une fois descendue à ce niveau, et n'est chargée depuis le réseau que si elle est en dessous, et uniquement pendant la plage : la charge est lancée pour une durée qui se termine à la fin des heures creuses. L'onglet Plan détaille ce qui est prévu et pourquoi. Quand le véhicule charge, la décharge est limitée à la consommation de la maison : la voiture prend le réseau, la maison reste sur la batterie.",
     st_selfuse: "Autoconsommation", st_export: "Surplus injecté", st_mixed: "Solaire + réseau", st_battery: "Sur batterie",
     st_gridchg: "Charge batterie réseau", st_grid: "Réseau", st_idle: "Veille",
     inv_ok: "Raccordé", inv_standby: "Veille", inv_off: "Arrêt", inv_fault: "Défaut",
@@ -768,6 +849,9 @@ const FS_I18N = {
       ve: "EV charging: battery powers the home only", preserve: "Off-peak: battery kept for later", hc: "Off-peak: battery is enough" },
     pil_d_off: "Turn on auto mode to manage the battery and charging during off-peak hours. While it is on, the old off-peak charging automations are disabled.",
     pil_d_attente: "Next window {a}–{b} · planned target {c}% (battery {soc}%)",
+    pil_d_att_charge: "Window {d} {a}–{b}: charging planned up to {c}% (≈ {k} kWh) around {s}",
+    pil_d_att_enough: "Window {d} {a}–{b}: no charging, the battery is enough (need {c}%)",
+    pil_d_att_small: "Window {d} {a}–{b}: no charging, only {k} kWh would be missing",
     pil_d_charge: "Up to {c}% at {p} · battery {soc}% · window ends {b}",
     pil_d_ve: "Discharge limited to {w}, the home's consumption: the car charges from the grid, the home stays on the battery.",
     pil_d_preserve: "Battery ({soc}%) at the level needed until the next window ({c}%): the home runs on off-peak grid power until {b}.",
@@ -781,11 +865,62 @@ const FS_I18N = {
     ps_fixed: "Fixed target", ps_max: "Maximum target", ps_margin: "Safety margin", ps_power: "Grid charging power",
     ps_prot: "Battery protection", ps_preserve: "Off-peak, keep the battery once it drops to the level needed for later",
     ps_protect_ev: "While the car charges, the battery powers the home but not the car", ps_dis: "Normal discharge power",
-    ps_ev: "Vehicle", ps_ev_hc: "Start car charging at the beginning of off-peak hours",
-    ps_ev_note: "Leave this off if your own night charging automations stay active.",
+    ps_scope: "Protection active", ps_scopes: { "Heures creuses": "Off-peak hours", "Toujours": "Always" },
+    ps_min: "Minimum charge (below this, no charging)", ps_late: "Charge at the end of the window",
+    ps_late_note: "Charging starts just early enough to finish when off-peak hours end (less time at full charge, morning sun still counts).",
+    tab_plan: "Plan",
+    pl_now: "Now", pl_off_note: "Auto mode is off: nothing is being controlled. This is what I would do if it were on.",
+    pl_auto_off_warn: "The control automation is disabled: the safeguard turns auto mode off.",
+    pl_tonight: "tonight", pl_today: "today", pl_tomorrow: "tomorrow", pl_cur: "active",
+    pl_win: "Window {d} {a} – {b}",
+    pl_h_charging: "Charging up to {c}%",
+    pl_h_charge: "I will charge the battery to {c}% from the grid",
+    pl_h_enough: "No charging: the battery is enough",
+    pl_h_small: "No charging: only {k} kWh missing",
+    pl_h_disabled: "No grid charging (option off)",
+    pl_t_charging: "Battery at {soc}%. Stops at {c}%, and at {e} at the latest: charging was started for a duration that ends with off-peak hours, so the inverter stops it by itself.",
+    pl_t_charge: "≈ {k} kWh at {p}, about {d}. Starts around {s} to finish around {e2}. Stops at {c}%, and at {e} at the latest, when off-peak hours end.",
+    pl_t_charge_early: "≈ {k} kWh at {p}, about {d}, from {s}. Stops at {c}%, and at {e} at the latest, when off-peak hours end.",
+    pl_t_grid_win: "During the window, the home runs on off-peak grid power.",
+    pl_t_enough: "Battery expected at {s0}% when the window starts, above the {c}% needed.",
+    pl_t_allbat: "It powers the home for the whole window: nothing is bought from the grid.",
+    pl_t_hold: "It powers the home down to {c}% (around {h}), then I keep it there: the home runs on off-peak grid power until {e} (≈ {g} kWh).",
+    pl_t_nohold: "It powers the home, even below that level (\"keep the battery\" option off).",
+    pl_t_small: "Reaching {c}% would take {k} kWh, below the {m} kWh threshold: not worth charging.",
+    pl_t_small_hold: "The battery is kept at its level during the window: the home runs on off-peak grid power.",
+    pl_t_disabled: "The battery would only reach ≈ {s0}% for the {c}% needed. Turn on \"Charge the battery off-peak\" in Control if you want me to top it up.",
+    pl_why: "Why",
+    pl_w_load: "From {e} to the next window ({n}), {h} h, the home will use ≈ {l} kWh ({c} kWh/day, {src}).",
+    pl_src_month: "monthly average excl. car", pl_src_fixed: "set value",
+    pl_w_pv: "Solcast forecasts {p} kWh of solar over that period; I count {k}% → {pk} kWh.",
+    pl_w_credit: "Solar surplus expected before the window ends adds ≈ {x} kWh.",
+    pl_w_need: "That leaves ≈ {b} kWh for the battery to supply.",
+    pl_w_noneed: "Solar should cover consumption: no reserve needed beyond the minimum.",
+    pl_w_tgt: "Level needed at the end of the window: {fin}% reserve + {x}% ({b} kWh of {cap} kWh) + {m}% margin = {raw}%, rounded up to 5%: {c}%{cap2}.",
+    pl_w_tgt_cap: " (capped at {max}%)",
+    pl_w_tgt_min: "Level needed: the end-of-discharge reserve, {c}%.",
+    pl_w_tgt_fixed: "Fixed target set to {c}%.",
+    pl_w_soc_cur: "Battery currently at {soc}%.",
+    pl_w_soc: "Battery at {soc}% now, expected at ≈ {s0}% when the window starts (average consumption minus forecast solar until then). This plan is updated continuously: the decision is made with the actual level during the window.",
+    pl_w_miss: "≈ {m} kWh missing ({s0}% → {c}%), above the {min} kWh threshold: charging is worth it.",
+    pl_next: "Next windows (estimate)", pl_c_win: "Window", pl_c_load: "Use", pl_c_pv: "Solar", pl_c_need: "Need", pl_c_tgt: "Level",
+    pl_ev_h: "Car", pl_ev_v: "I do not control the charger",
+    pl_ev_t: "If the car charges {scope}, I limit battery discharge to the home's consumption (rounded up to 250 W): the car uses the grid, the battery is not drained for it.",
+    pl_ev_hc: "during off-peak hours", pl_ev_all: "at any time",
+    pl_ev_off: "Protection off: if the car charges, the battery may power it too.",
+    pl_ev_now: "Right now: car charging, discharge limited to {w}.",
+    pl_ev_now_out: "Right now: car charging outside off-peak hours: no limit (scope \"Off-peak hours\").",
+    pl_sec_h: "Safeguards",
+    pl_sec: ["Grid charging only happens during an off-peak window. It is started for a duration that ends with the window, so the inverter stops it by itself, even if Home Assistant stops responding.",
+      "It stops as soon as the battery reaches the target level.",
+      "Turning auto mode off immediately stops any forced charge and restores normal discharge.",
+      "Safeguard: a forced charge found outside off-peak hours is stopped; if the control automation is disabled, auto mode is turned off and everything is reset."],
+    pl_sec_st: "Automation: {a} · Safeguard: {g} · Forced charge: {c}",
+    pl_active: "on", pl_inactive: "off", pl_missing: "missing", pl_stopped: "stopped",
+    pl_log: "Log (48 h)", pl_log_empty: "No control actions in the last 48 h.",
     ps_est: "Consumption estimate", ps_src: "Home consumption", ps_srcs: { "Moyenne du mois": "Monthly average (excl. EV)", "Valeur fixe": "Fixed value" },
     ps_day: "Consumption per day", ps_pvf: "Share of forecast solar counted", ps_cap: "Battery capacity",
-    ps_how: "How it works: for each off-peak window, the control estimates the energy the home will need between the end of the window and the next one (average consumption minus Solcast forecast solar) and derives the battery level needed. Above that level the battery powers the home as usual: nothing is bought from the grid. It hands over to the (off-peak) grid only once it drops to that level, and is charged from the grid only when below it. While the car charges, discharge is limited to the home's consumption: the car uses the grid, the home stays on the battery.",
+    ps_how: "How it works: for each off-peak window, the control estimates the energy the home will need between the end of the window and the next one (average consumption minus Solcast forecast solar) and derives the battery level needed. Above that level the battery powers the home as usual: nothing is bought from the grid. It hands over to the (off-peak) grid only once it drops to that level, and is charged from the grid only when below it, and only during the window: charging is started for a duration that ends with off-peak hours. The Plan tab shows what is planned and why. While the car charges, discharge is limited to the home's consumption: the car uses the grid, the home stays on the battery.",
     st_selfuse: "Self-consumption", st_export: "Exporting surplus", st_mixed: "Solar + grid", st_battery: "On battery",
     st_gridchg: "Grid charging battery", st_grid: "Grid", st_idle: "Idle",
     inv_ok: "On-grid", inv_standby: "Standby", inv_off: "Off", inv_fault: "Fault",
@@ -915,7 +1050,7 @@ class FusionSolarCard extends HTMLElement {
         <div class="hdr" id="hdr">
           <div class="hname"><div><div class="name" id="h_name"></div><div class="subt" id="h_sub"></div></div>
             <div class="tabs" id="tabs" role="tablist">
-              <button role="tab" data-tab="flow" id="tab_f"></button><button role="tab" data-tab="pil" id="tab_p"></button><button role="tab" data-tab="opt" id="tab_o"></button><button role="tab" data-tab="rec" id="tab_r"></button>
+              <button role="tab" data-tab="flow" id="tab_f"></button><button role="tab" data-tab="plan" id="tab_n"></button><button role="tab" data-tab="pil" id="tab_p"></button><button role="tab" data-tab="opt" id="tab_o"></button><button role="tab" data-tab="rec" id="tab_r"></button>
             </div></div>
           <div class="chips">
             <span class="badge bad" id="b_alarm"></span><span class="badge warn" id="b_evoff"></span>
@@ -926,7 +1061,7 @@ class FusionSolarCard extends HTMLElement {
         </div>
         <div class="view" id="v_flow">
           <div class="wrap" id="svgwrap"></div>
-          <div class="pban" id="pban" data-tab="pil"><span class="pdot"></span><span id="pban_t"></span><span class="pgo">›</span></div>
+          <div class="pban" id="pban" data-tab="plan"><span class="pdot"></span><span id="pban_t"></span><span class="pgo">›</span></div>
           <div class="tiles" id="tiles">
             <div class="tile" data-e="pv_daily"><div class="tl" id="l_prod"></div><div class="tv" id="k_prod">—</div><div class="ts" id="k_prod_s"></div></div>
             <div class="tile" data-tab="rec"><div class="tl" id="l_self"></div><div class="tv" id="k_self">—</div><div class="ts" id="k_self_s"></div><div class="bar"><i id="k_self_b" style="background:${FS_COL.pv}"></i></div></div>
@@ -936,6 +1071,7 @@ class FusionSolarCard extends HTMLElement {
             <div class="tile" data-e="forecast_tomorrow"><div class="tl" id="l_fc"></div><div class="tv" id="k_fc">—</div><div class="ts" id="k_fc_s"></div></div>
           </div>
         </div>
+        <div class="view pane" id="v_plan"><div id="n_body"></div></div>
         <div class="view pane" id="v_pil"><div id="p_body"></div></div>
         <div class="view pane" id="v_opt"><div class="obar" id="o_bar"></div><div id="o_body"></div></div>
         <div class="view pane" id="v_rec"><div class="obar" id="r_bar"></div><div id="r_body"></div></div>
@@ -950,9 +1086,9 @@ class FusionSolarCard extends HTMLElement {
 
     root.addEventListener("click", (ev) => {
       const path = ev.composedPath();
-      if (path.some((n) => n.id === "v_opt" || n.id === "v_rec" || n.id === "v_pil")) return;
+      if (path.some((n) => n.id === "v_opt" || n.id === "v_rec" || n.id === "v_pil" || n.id === "v_plan")) return;
       if (path.some((n) => n.id === "b_auto")) { this._pilToggle(); return; }
-      if (path.some((n) => n.id === "pban")) { this._setTab("pil"); return; }
+      if (path.some((n) => n.id === "pban")) { this._setTab("plan"); return; }
       const tabEl = path.find((n) => n.dataset && n.dataset.tab && n.classList && n.classList.contains("tile"));
       if (tabEl) { this._setTab(tabEl.dataset.tab); return; }
       const el = path.find((n) => n.dataset && n.dataset.e);
@@ -1006,7 +1142,9 @@ class FusionSolarCard extends HTMLElement {
     r.getElementById("tab_o").textContent = this._t("tab_opt");
     r.getElementById("tab_r").textContent = this._t("tab_rec");
     r.getElementById("tab_p").textContent = this._t("tab_pil");
+    r.getElementById("tab_n").textContent = this._t("tab_plan");
     r.getElementById("tab_p").classList.toggle("hide", this._config.show_pilot === false || !this._hasPilot());
+    r.getElementById("tab_n").classList.toggle("hide", this._config.show_pilot === false || !this._hasPilot());
     r.getElementById("tab_o").classList.toggle("hide", this._config.show_optimization === false);
     r.getElementById("tab_r").classList.toggle("hide", this._config.show_recap === false);
     const noTabs = this._config.show_optimization === false && this._config.show_recap === false && (this._config.show_pilot === false || !this._hasPilot());
@@ -1016,8 +1154,8 @@ class FusionSolarCard extends HTMLElement {
   _setTab(tab, init) {
     if (tab === "opt" && this._config.show_optimization === false) tab = "flow";
     if (tab === "rec" && this._config.show_recap === false) tab = "flow";
-    if (tab === "pil" && (this._config.show_pilot === false || !this._hasPilot())) tab = "flow";
-    if (!["flow", "pil", "opt", "rec"].includes(tab)) tab = "flow";
+    if ((tab === "pil" || tab === "plan") && (this._config.show_pilot === false || !this._hasPilot())) tab = "flow";
+    if (!["flow", "plan", "pil", "opt", "rec"].includes(tab)) tab = "flow";
     this._tab = tab;
     if (!init) { try { localStorage.setItem(this._tabKey(), tab); } catch (e) { /* ignore */ } }
     const r = this.shadowRoot;
@@ -1026,8 +1164,10 @@ class FusionSolarCard extends HTMLElement {
     r.getElementById("v_opt").classList.toggle("on", tab === "opt");
     r.getElementById("v_rec").classList.toggle("on", tab === "rec");
     r.getElementById("v_pil").classList.toggle("on", tab === "pil");
+    r.getElementById("v_plan").classList.toggle("on", tab === "plan");
     if (!this._hass) return;
     if (tab === "pil") this._pilRender(true);
+    if (tab === "plan") { this._planRender(true); this._planLog(true); }
     if (tab === "opt") this._optShow();
     if (tab === "rec") this._recShow();
   }
@@ -2170,7 +2310,13 @@ const FsPilotMixin = {
     });
   },
 
-  _pilToggle() { this._pilCall("input_boolean", "toggle", "auto_mode"); },
+  /* état explicite (pas de bascule) et anti double-clic : un second clic dans les 3 s est ignoré */
+  _pilToggle() {
+    const now = Date.now();
+    if (this._pilLast && now - this._pilLast < 3000) return;
+    this._pilLast = now;
+    this._pilCall("input_boolean", this._on("auto_mode") ? "turn_off" : "turn_on", "auto_mode");
+  },
 
   _pilWin() {
     const W = this._off;
@@ -2196,7 +2342,13 @@ const FsPilotMixin = {
     const pw = this._n("charge_power");
     let d = "";
     if (st === "off") d = t("pil_d_off");
-    else if (st === "attente") d = nxt ? t("pil_d_attente", { a: this._hm(nxt[0]), b: this._hm(nxt[1]), c, soc }) : "";
+    else if (st === "attente") {
+      const D = this._planCached();
+      if (D && !D.cur && ["charge", "enough", "small"].includes(D.kind)) {
+        const o = { d: this._planDay(D.W[0]), a: this._hm(D.W[0]), b: this._hm(D.W[1]), c: f(D.P.tgt), k: this._f(D.missK, 1), s: D.start ? this._hm(D.start) : "" };
+        d = t(`pil_d_att_${D.kind}`, o);
+      } else d = nxt ? t("pil_d_attente", { a: this._hm(nxt[0]), b: this._hm(nxt[1]), c, soc }) : "";
+    }
     else if (st === "charge") d = t("pil_d_charge", { c, p: this._W(pw), soc, b: cur ? this._hm(cur[1]) : "—" });
     else if (st === "ve") d = t("pil_d_ve", { w: this._W(this._n("pilot_limit")) });
     else if (st === "preserve") d = t("pil_d_preserve", { soc, b: cur ? this._hm(cur[1]) : "—" });
@@ -2212,8 +2364,9 @@ const FsPilotMixin = {
     const btn = r.getElementById("b_auto"), ban = r.getElementById("pban");
     if (btn) btn.classList.toggle("show", has);
     if (ban) ban.classList.toggle("show", has);
-    const tp = r.getElementById("tab_p");
+    const tp = r.getElementById("tab_p"), tn = r.getElementById("tab_n");
     if (tp) tp.classList.toggle("hide", !has);
+    if (tn) tn.classList.toggle("hide", !has);
     if (!has) return;
     const S = this._pilStatus();
     btn.setAttribute("aria-pressed", String(S.auto));
@@ -2224,6 +2377,7 @@ const FsPilotMixin = {
     const bt = r.getElementById("pban_t");
     if (bt.textContent !== txt) bt.textContent = txt;
     if (this._tab === "pil") this._pilRender(false);
+    if (this._tab === "plan") { this._planRender(false); this._planLog(false); }
   },
 
   _pilRender(full) {
@@ -2259,10 +2413,9 @@ const FsPilotMixin = {
       <div class="kpis">${kp("p_k_target", t("pk_target"))}${kp("p_k_soc", t("pk_soc"))}${kp("p_k_win", t("pk_win"))}${kp("p_k_block", t("pk_block"))}</div>
       <div class="pgrid">
         <div class="pset"><h4>${t("ps_hc")}</h4>${win("hc1_start", "hc1_end", t("ps_hc1"))}${win("hc2_start", "hc2_end", t("ps_hc2"), "hc2_enabled")}</div>
-        <div class="pset"><h4>${t("ps_prot")}</h4>${sw("opt_preserve", t("ps_preserve"))}${sw("opt_protect_ev", t("ps_protect_ev"))}${num("discharge_normal", t("ps_dis"))}</div>
-        <div class="pset"><h4>${t("ps_bat")}</h4>${sw("opt_charge", t("ps_charge"))}${sel("target_mode", t("ps_mode"), t("ps_modes"))}${num("target_fixed", t("ps_fixed"))}${num("target_max", t("ps_max"))}${num("margin", t("ps_margin"))}${num("charge_power", t("ps_power"))}</div>
+        <div class="pset"><h4>${t("ps_prot")}</h4>${sw("opt_preserve", t("ps_preserve"))}${sw("opt_protect_ev", t("ps_protect_ev"))}${sel("ev_scope", t("ps_scope"), t("ps_scopes"))}${num("discharge_normal", t("ps_dis"))}</div>
+        <div class="pset"><h4>${t("ps_bat")}</h4>${sw("opt_charge", t("ps_charge"))}${sel("target_mode", t("ps_mode"), t("ps_modes"))}${num("target_fixed", t("ps_fixed"))}${num("target_max", t("ps_max"))}${num("margin", t("ps_margin"))}${num("charge_power", t("ps_power"))}${num("charge_min", t("ps_min"))}${sw("late_charge", t("ps_late"), t("ps_late_note"))}</div>
         <div class="pset"><h4>${t("ps_est")}</h4>${sel("conso_source", t("ps_src"), t("ps_srcs"))}${num("conso_day", t("ps_day"))}${num("pv_factor", t("ps_pvf"))}${num("capacity", t("ps_cap"))}</div>
-        <div class="pset"><h4>${t("ps_ev")}</h4>${sw("opt_ev_hc", t("ps_ev_hc"), t("ps_ev_note"))}</div>
       </div>
       <div class="phow">${t("ps_how")}</div>`;
   },
@@ -2315,8 +2468,243 @@ const FsPilotMixin = {
     const dim = (k, on) => { const row = el.querySelector(`[data-row="${k}"]`); if (row) row.classList.toggle("dis", on); };
     dim("target_fixed", !fixed); dim("margin", fixed);
     dim("conso_day", this._s("conso_source") !== "Valeur fixe");
+    dim("ev_scope", !this._on("opt_protect_ev"));
+    ["charge_power", "charge_min", "late_charge"].forEach((k) => dim(k, !this._on("opt_charge")));
     const hc2 = el.querySelector('[data-row="hc2_start"]');
     if (hc2) hc2.querySelectorAll("input").forEach((i) => { i.disabled = this._eid("hc2_enabled") ? !this._on("hc2_enabled") : false; });
+  },
+
+  /* ---------- onglet Plan : ce que le pilotage va faire et pourquoi ---------- */
+  _planInst() {
+    const W = this._off;
+    if (!W.length) return [];
+    const d0 = fsDay0(Date.now()), inst = [];
+    for (let d = -1; d <= 3; d++) for (const [a, b] of W) {
+      const s = new Date(d0); s.setDate(s.getDate() + d); s.setMinutes(a);
+      const e = new Date(d0); e.setDate(e.getDate() + d + (b > a ? 0 : 1)); e.setMinutes(b);
+      inst.push([s.getTime(), e.getTime()]);
+    }
+    return inst.sort((x, y) => x[0] - y[0]);
+  },
+
+  /* même calcul que le capteur « besoin » de Home Assistant */
+  _planEnv() {
+    const cap = Math.max(this._n("capacity") ?? (Number(this._config.battery_capacity) || 10), 1);
+    const fin = this._n("battery_end_soc") ?? 10;
+    const k = (this._n("pv_factor") ?? 80) / 100;
+    const now = Date.now(), dt = new Date(now);
+    const month = this._kwh("conso_month"), days = dt.getDate() - 1 + dt.getHours() / 24;
+    const useMonth = this._s("conso_source") !== "Valeur fixe" && month != null && month > 0 && days >= 2;
+    const conso = useMonth ? month / days : (this._n("conso_day") ?? 12);
+    return {
+      now, cap, fin, k, conso, useMonth, fc: this._forecastHourly(new Array(24).fill(0)),
+      max: this._n("target_max") ?? 90, margin: this._n("margin") ?? 5, fixed: this._s("target_mode") === "Fixe",
+      fixedV: this._n("target_fixed") ?? 80, pw: Math.max(this._n("charge_power") ?? 3000, 500),
+      minK: this._n("charge_min") ?? 1, late: this._eid("late_charge") ? this._on("late_charge") : false,
+      optCharge: this._eid("opt_charge") ? this._on("opt_charge") : true, preserve: this._eid("opt_preserve") ? this._on("opt_preserve") : true,
+    };
+  },
+
+  _planPv(env, a, b) {
+    let s = 0;
+    for (const [t, v] of env.fc) {
+      const e = t + 3600000, lo = Math.max(t, a), hi = Math.min(e, b);
+      if (hi > lo) s += v * (hi - lo) / 3600000;
+    }
+    return s;
+  },
+
+  _planNeed(env, W, Nn, current) {
+    const E = W[1], N = Nn ? Nn[0] : E + 18 * 3600000;
+    const hours = (N - E) / 3600000;
+    const load = env.conso / 24 * hours;
+    const pv = this._planPv(env, E, N);
+    let credit = 0;
+    if (current) credit = Math.max(this._planPv(env, env.now, E) * env.k - env.conso / 24 * (E - env.now) / 3600000, 0);
+    const need = Math.max(load - pv * env.k - credit, 0);
+    const pct = need > 0.2 ? need / env.cap * 100 + env.margin : 0;
+    const raw = env.fin + pct;
+    const tgt = env.fixed ? env.fixedV : Math.ceil(fsClamp(raw, env.fin, env.max) / 5) * 5;
+    return { E, N, hours, load, pv, credit, need, raw, tgt, capped: raw > env.max };
+  },
+
+  _planDay(t) {
+    const d = new Date(t), h = d.getHours(), now = Date.now();
+    const day = Math.round((fsDay0(t) - fsDay0(now)) / 86400000);
+    if (t > now && t - now < 18 * 3600000 && (h >= 20 || h < 8)) return this._t("pl_tonight");
+    if (day === 0) return this._t("pl_today");
+    if (day === 1) return this._t("pl_tomorrow");
+    return d.toLocaleDateString(this._lang(), { weekday: "long" });
+  },
+
+  _planWhen(t) {
+    const day = Math.round((fsDay0(t) - fsDay0(Date.now())) / 86400000);
+    return day === 0 ? this._hm(t) : `${day === 1 ? this._t("pl_tomorrow") : new Date(t).toLocaleDateString(this._lang(), { weekday: "long" })} ${this._hm(t)}`;
+  },
+
+  _planCompute() {
+    const env = this._planEnv(), inst = this._planInst(), now = env.now;
+    if (!inst.length) return null;
+    const cur = inst.find(([s, e]) => s <= now && now < e);
+    const W = cur || inst.find(([s]) => s > now);
+    if (!W) return null;
+    const after = inst.filter(([s]) => s >= W[1]);
+    const P = this._planNeed(env, W, after[0], !!cur);
+    // valeurs de Home Assistant prioritaires (ce sont elles qui pilotent)
+    const needHA = this._n("pilot_need"), tgtHA = this._n("pilot_target");
+    if (needHA != null) P.need = needHA;
+    if (tgtHA != null) P.tgt = tgtHA;
+    const soc = this._n("battery_soc") ?? 0;
+    let s0 = soc;
+    if (!cur) {
+      const net = env.conso / 24 * (W[0] - now) / 3600000 - this._planPv(env, now, W[0]) * env.k;
+      s0 = fsClamp(soc - net / env.cap * 100, env.fin, 100);
+    }
+    const D = { env, W, cur: !!cur, P, soc, s0, st: this._s("pilot_state") };
+    const missK = Math.max(P.tgt - s0, 0) / 100 * env.cap;
+    D.missK = missK;
+    if (D.st === "charge" && cur) D.kind = "charging";
+    else if (s0 >= P.tgt - 1) D.kind = "enough";
+    else if (!env.optCharge) D.kind = "disabled";
+    else if (missK < env.minK) D.kind = "small";
+    else D.kind = "charge";
+    if (D.kind === "charge") {
+      const h = missK / (env.pw / 1000);
+      D.durMin = h * 60;
+      const startLate = W[1] - (h + 0.25) * 3600000;
+      D.start = env.late ? Math.max(W[0], startLate, cur ? now : 0) : Math.max(W[0], now);
+      D.end2 = Math.min(D.start + h * 3600000, W[1]);
+    }
+    if (D.kind === "enough") {
+      const winH = (W[1] - Math.max(W[0], now)) / 3600000;
+      const pvWin = this._planPv(env, Math.max(W[0], now), W[1]) * env.k;
+      const useK = Math.max(env.conso / 24 * winH - pvWin, 0);
+      const endSoc = s0 - useK / env.cap * 100;
+      if (endSoc > P.tgt || !env.preserve || P.tgt <= env.fin + 2) D.hold = null;
+      else {
+        const perH = env.conso / 24;
+        const hh = perH > 0 ? ((s0 - P.tgt) / 100 * env.cap) / perH : 0;
+        const ht = Math.max(W[0], now) + hh * 3600000;
+        D.hold = { at: ht, grid: Math.max(perH * (W[1] - ht) / 3600000, 0) };
+      }
+    }
+    // plages suivantes (estimation)
+    D.next = after.slice(0, 3).map((w, i) => {
+      if (w[0] - now > 40 * 3600000) return null;
+      return Object.assign({ w }, this._planNeed(env, w, after[i + 1], false));
+    }).filter(Boolean);
+    return D;
+  },
+
+  _planCached() {
+    const now = Date.now();
+    if (!this._planC || now - this._planC.at > 5000) { let D = null; try { D = this._planCompute(); } catch (e) { D = null; } this._planC = { at: now, D }; }
+    return this._planC.D;
+  },
+
+  _planRender(force) {
+    const el = this.shadowRoot && this.shadowRoot.getElementById("n_body");
+    if (!el || !this._hass) return;
+    const now = Date.now();
+    if (!force && this._planAt && now - this._planAt < 4000) return;
+    this._planAt = now;
+    const html = this._planHtml();
+    if (force || html !== this._planPrev) { el.innerHTML = html; this._planPrev = html; }
+  },
+
+  _planHtml() {
+    const t = (k, v) => this._t(k, v), f = (v, d = 0) => this._f(v, d), e = fsEsc;
+    if (!this._hasPilot()) return `<div class="onote">${t("pil_missing")}</div>`;
+    const S = this._pilStatus();
+    const au = this._st("pilot_automation");
+    let warn = "";
+    if (!S.auto) warn = t("pl_off_note");
+    else if (au && au.state === "off") warn = t("pl_auto_off_warn");
+    const head = `
+      <div class="phead nhead" style="--pc:${S.col}">
+        <div class="nnow"><span class="pdot${S.live ? " live" : ""}"></span>${e(t("pl_now"))}</div>
+        <div class="pst"><div class="rh">${e(S.label)}</div><div class="rt" style="margin-top:4px">${e(S.detail)}</div>${warn ? `<div class="nwarn">${e(warn)}</div>` : ""}</div>
+      </div>`;
+    const D = this._planCompute();
+    if (!D) return head + `<div class="onote">${t("pil_missing")}</div>`;
+    const { env, W, P } = D;
+    const hm = (x) => this._hm(x), kw = (x) => f(x, 1);
+    const dl = D.cur ? t("pl_cur") : this._planDay(W[0]);
+    const tg = f(P.tgt);
+    let hd = "", tx = "", col = FS_PIL_COL.attente;
+    if (D.kind === "charging") { hd = t("pl_h_charging", { c: tg }); tx = t("pl_t_charging", { soc: f(D.soc), c: tg, e: hm(W[1]) }) + " " + t("pl_t_grid_win"); col = FS_PIL_COL.charge; }
+    else if (D.kind === "charge") {
+      hd = t("pl_h_charge", { c: tg }); col = FS_PIL_COL.charge;
+      const late = env.late && D.start > Math.max(W[0], env.now) + 60000;
+      tx = t(late ? "pl_t_charge" : "pl_t_charge_early", { k: kw(D.missK), p: this._W(env.pw), d: this._dur(D.durMin), s: hm(D.start), e2: hm(D.end2), c: tg, e: hm(W[1]) }) + " " + (env.preserve ? t("pl_t_grid_win") : "");
+    } else if (D.kind === "enough") {
+      hd = t("pl_h_enough"); col = FS_PIL_COL.preserve;
+      tx = (D.cur ? "" : t("pl_t_enough", { s0: f(D.s0), c: tg }) + " ");
+      if (D.hold) tx += t("pl_t_hold", { c: tg, h: hm(D.hold.at), e: hm(W[1]), g: kw(D.hold.grid) });
+      else tx += env.preserve || P.tgt <= env.fin + 2 ? t("pl_t_allbat") : t("pl_t_nohold");
+    } else if (D.kind === "small") {
+      hd = t("pl_h_small", { k: kw(D.missK) }); col = FS_PIL_COL.hc;
+      tx = t("pl_t_small", { k: kw(D.missK), c: tg, m: kw(env.minK) }) + (env.preserve ? " " + t("pl_t_small_hold") : "");
+    } else { hd = t("pl_h_disabled"); col = FS_PIL_COL.off; tx = t("pl_t_disabled", { s0: f(D.s0), c: tg }); }
+    // pourquoi
+    const why = [];
+    why.push(t("pl_w_load", { e: hm(P.E), n: this._planWhen(P.N), h: f(P.hours, 1), l: kw(P.load), c: kw(env.conso), src: t(env.useMonth ? "pl_src_month" : "pl_src_fixed") }));
+    why.push(t("pl_w_pv", { p: kw(P.pv), k: f(env.k * 100), pk: kw(P.pv * env.k) }));
+    if (P.credit > 0.05) why.push(t("pl_w_credit", { x: kw(P.credit) }));
+    why.push(P.need > 0.2 ? t("pl_w_need", { b: kw(P.need) }) : t("pl_w_noneed"));
+    if (env.fixed) why.push(t("pl_w_tgt_fixed", { c: tg }));
+    else if (P.need > 0.2) why.push(t("pl_w_tgt", { fin: f(env.fin), x: f(P.need / env.cap * 100, 1), b: kw(P.need), cap: f(env.cap), m: f(env.margin), raw: f(env.fin + P.need / env.cap * 100 + env.margin, 1), c: tg, cap2: env.fin + P.need / env.cap * 100 + env.margin > env.max ? t("pl_w_tgt_cap", { max: f(env.max) }) : "" }));
+    else why.push(t("pl_w_tgt_min", { c: tg }));
+    why.push(D.cur ? t("pl_w_soc_cur", { soc: f(D.soc) }) : t("pl_w_soc", { soc: f(D.soc), s0: f(D.s0) }));
+    if (D.kind === "charge") why.push(t("pl_w_miss", { m: kw(D.missK), s0: f(D.s0), c: tg, min: kw(env.minK) }));
+    const main = `
+      <div class="rec nplan" style="--rc:${col}">
+        <div class="ic"><svg viewBox="0 0 24 24"><rect x="3" y="7" width="16" height="10" rx="2"/><path d="M21 10v4"/><path d="M11 9l-2 3h4l-2 3"/></svg></div>
+        <div><div class="rh">${e(t("pl_win", { d: dl, a: hm(W[0]), b: hm(W[1]) }))}</div>
+          <div class="rv">${e(hd)}</div><div class="rt">${e(tx)}</div>
+          <div class="nwhy"><div class="nwh">${e(t("pl_why"))}</div><ol>${why.map((w) => `<li>${e(w)}</li>`).join("")}</ol></div>
+        </div>
+      </div>`;
+    // plages suivantes
+    let nx = "";
+    if (D.next.length) {
+      nx = `<div class="pset nnext"><h4>${e(t("pl_next"))}</h4><table class="ntab"><thead><tr><th>${e(t("pl_c_win"))}</th><th class="nc">${e(t("pl_c_load"))}</th><th>${e(t("pl_c_pv"))}</th><th>${e(t("pl_c_need"))}</th><th>${e(t("pl_c_tgt"))}</th></tr></thead><tbody>${D.next.map((r) => `<tr><td>${e(this._planDay(r.w[0]))} ${e(hm(r.w[0]))}–${e(hm(r.w[1]))}</td><td class="nc">${kw(r.load)} kWh</td><td>${kw(r.pv * env.k)} kWh</td><td>${kw(r.need)} kWh</td><td><b>${f(r.tgt)} %</b></td></tr>`).join("")}</tbody></table></div>`;
+    }
+    // voiture
+    const prot = this._eid("opt_protect_ev") ? this._on("opt_protect_ev") : true;
+    const always = this._s("ev_scope") === "Toujours";
+    let evt = prot ? t("pl_ev_t", { scope: t(always ? "pl_ev_all" : "pl_ev_hc") }) : t("pl_ev_off");
+    if (this._on("pilot_ev") && prot) {
+      const lim = this._n("pilot_limit"), norm = this._n("discharge_normal") ?? 5000;
+      evt += " " + (lim != null && lim < norm ? t("pl_ev_now", { w: this._W(lim) }) : t("pl_ev_now_out"));
+    }
+    const ev = `<div class="rec" style="--rc:${FS_COL.ev || "#4f9dff"}"><div class="ic"><svg viewBox="0 0 24 24"><path d="M5 16l1.5-5h11l1.5 5"/><rect x="3" y="16" width="18" height="4" rx="1.5"/><circle cx="7" cy="20" r="1.4"/><circle cx="17" cy="20" r="1.4"/></svg></div><div><div class="rh">${e(t("pl_ev_h"))}</div><div class="rv">${e(t("pl_ev_v"))}</div><div class="rt">${e(evt)}</div></div></div>`;
+    // sécurités
+    const stA = (k) => { const s = this._st(k); return !s ? t("pl_missing") : s.state === "on" ? t("pl_active") : t("pl_inactive"); };
+    const fc = this._s("battery_forced_charge");
+    const fcs = !fc ? "—" : /^stopped$/i.test(fc) ? t("pl_stopped") : fc;
+    const sec = `<div class="rec" style="--rc:#3ddc84"><div class="ic"><svg viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 4.5-3.4 8.2-8 9-4.6-.8-8-4.5-8-9V6z"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg></div><div><div class="rh">${e(t("pl_sec_h"))}</div><ul class="nsec">${(t("pl_sec") || []).map((x) => `<li>${e(x)}</li>`).join("")}</ul><div class="rt">${e(t("pl_sec_st", { a: stA("pilot_automation"), g: stA("pilot_guard"), c: fcs }))}</div></div></div>`;
+    // journal
+    const L = this._planLogData;
+    const log = `<div class="pset nlog"><h4>${e(t("pl_log"))}</h4>${L == null ? `<div class="pnote">…</div>` : !L.length ? `<div class="pnote">${e(t("pl_log_empty"))}</div>` : `<ul>${L.map((x) => `<li><span class="nt">${e(this._planWhen(x.when))}</span><span>${e(x.message)}</span></li>`).join("")}</ul>`}</div>`;
+    return `${head}<div class="recs">${main}</div>${nx}<div class="recs ncols">${ev}${sec}</div>${log}`;
+  },
+
+  async _planLog(force) {
+    if (!this._hass || this._planLogBusy) return;
+    const now = Date.now();
+    if (!force && this._planLogAt && now - this._planLogAt < 120000) return;
+    this._planLogAt = now;
+    const ids = ["auto_mode", "pilot_state", "pilot_limit", "battery_forced_charge", "pilot_automation", "pilot_guard"].map((k) => this._eid(k)).filter(Boolean);
+    if (!ids.length) return;
+    this._planLogBusy = true;
+    try {
+      const res = await this._hass.callWS({ type: "logbook/get_events", start_time: new Date(now - 48 * 3600000).toISOString(), end_time: new Date(now + 60000).toISOString(), entity_ids: ids });
+      this._planLogData = (res || []).filter((x) => x.message && (x.name === "FusionSolar" || /fusionsolar/i.test(x.name || "")) && !x.state)
+        .map((x) => ({ when: fsTs(x.when), message: x.message })).sort((a, b) => b.when - a.when).slice(0, 25);
+    } catch (err) { this._planLogData = this._planLogData || []; }
+    this._planLogBusy = false;
+    this._planRender(true);
   },
 };
 

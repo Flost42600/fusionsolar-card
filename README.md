@@ -48,17 +48,22 @@ These are common-sense rules based on average consumption: check the result afte
 
 ![Optimization](images/optimization.png)
 
-## Control tab (auto mode)
+## Plan and Control tabs (auto mode)
 
-An **Auto** button in the header and a **Control** tab drive the battery and charging during off-peak hours. The logic runs in Home Assistant (one automation and a few helpers); the card is the control panel, so it keeps working with the browser closed.
+An **Auto** button in the header, a **Plan** tab and a **Control** tab manage the battery during off-peak hours. The logic runs in Home Assistant (two automations and a few helpers); the card is the control panel, so it keeps working with the browser closed.
+
+**Plan tab: what the control will do, and why.** For the current or next window, a plain sentence ("I will charge the battery to 65% from the grid", "No charging: the battery is enough"…), start and stop times, then the reasoning step by step: expected consumption until the next window, Solcast solar forecast and the share counted, energy the battery must supply, how the level needed is computed (reserve + need + margin, rounded), expected level at the start of the window. Below: an estimate for the next windows, what happens when the car charges, the safeguards and a log of the last 48 hours of actions. The banner on the Flow tab announces the same decision.
 
 - **Two adjustable off-peak windows** (the second one can be turned off).
-- **Grid only when the battery is not enough.** For each window, the control estimates the energy the home will need between the end of the window and the next one (average consumption excluding EV minus weighted Solcast solar, including any surplus expected during the window) and derives the battery level needed (+ margin, capped). Above that level the battery powers the home as usual, even off-peak: nothing is bought. It hands over to the (off-peak) grid only when it drops to that level, and it is charged from the grid (`huawei_solar.forcible_charge_soc`) only when below it. A fixed target is also possible.
-- **Car charging: battery for the home, grid for the car.** Discharge power is limited to the home's consumption (rounded up to 250 W) while the car charges, then restored.
-- **EV charging off-peak** (option): switches the charger to normal charging at the start of the window and back to PV preferred at the end.
+- **Charging only during off-peak hours.** Grid charging is started with `huawei_solar.forcible_charge` for a duration that ends with the window, so the inverter stops it by itself even if Home Assistant stops responding. It is stopped as soon as the battery reaches the target. "Charge at the end of the window" option: charging starts just early enough to finish when off-peak hours end. A charge smaller than the "Minimum charge" threshold is not started.
+- **Grid only when the battery is not enough.** The level needed comes from the energy the home will need between the end of the window and the next one (average consumption excluding EV minus weighted Solcast solar) + margin, capped. Above it the battery powers the home as usual, even off-peak: nothing is bought. It hands over to the (off-peak) grid only when it drops to that level. A fixed target is also possible.
+- **Car charging: battery for the home, grid for the car.** The card does not control the charger. While the car charges (off-peak, or always depending on the setting), discharge power is limited to the home's consumption (rounded up to 250 W), then restored.
+- **Safeguards.** Turning auto mode off immediately stops forced charging and restores normal discharge (the button ignores double clicks). The `FusionSolar – Garde-fou pilotage` automation stops any forced charge found outside off-peak hours and, if the control automation is disabled, turns auto mode off and resets everything.
 - While auto mode is on, the old off-peak charging automations are disabled; they are re-enabled when it is turned off.
 
-The helpers, template sensors and the automation are listed in the [French README](README.fr.md#onglet-pilotage-mode-auto); their names can be overridden under `entities:`. The control windows then replace the `offpeak` option. Without these entities the tab is hidden.
+The helpers, template sensors and automations are listed in the [French README](README.fr.md#onglets-plan-et-pilotage-mode-auto); their names can be overridden under `entities:`. The control windows then replace the `offpeak` option. Without these entities the tabs are hidden.
+
+![Plan](images/plan.png)
 
 ![Control](images/pilotage.png)
 
@@ -101,7 +106,7 @@ type: custom:fusionsolar-mini-card
 navigation_path: /lovelace/energy   # optional
 ```
 
-Other options: `show_pilot`, `layout` (auto, wide, tall), `optimization_days` (7, 14, 30), `pv1_peak` / `pv2_peak` (W, glow intensity), `heatpump_min_power`, `grid_invert`, `battery_invert`, `show_header`, `show_stats`, `show_optimization`, `show_recap`, `language` (fr, en).
+Other options: `show_pilot` (Plan and Control tabs), `layout` (auto, wide, tall), `optimization_days` (7, 14, 30), `pv1_peak` / `pv2_peak` (W, glow intensity), `heatpump_min_power`, `grid_invert`, `battery_invert`, `show_header`, `show_stats`, `show_optimization`, `show_recap`, `language` (fr, en).
 
 ### Conventions and entities
 

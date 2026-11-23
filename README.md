@@ -53,9 +53,8 @@ These are common-sense rules based on average consumption: check the result afte
 An **Auto** button in the header and a **Control** tab drive the battery and charging during off-peak hours. The logic runs in Home Assistant (one automation and a few helpers); the card is the control panel, so it keeps working with the browser closed.
 
 - **Two adjustable off-peak windows** (the second one can be turned off).
-- **Battery charging when needed**: for each window, the need until the next window is estimated (average home consumption excluding EV minus weighted Solcast solar), turned into a target level (+ margin, capped), then the battery is charged from the grid up to that level (`huawei_solar.forcible_charge_soc`). A fixed target is also possible.
-- **Battery preserved** during off-peak hours: the home runs on cheap grid power and the battery is kept for peak hours.
-- **Battery protected while the EV charges**: discharge power is set to 0 W while the car charges, then restored.
+- **Grid only when the battery is not enough.** For each window, the control estimates the energy the home will need between the end of the window and the next one (average consumption excluding EV minus weighted Solcast solar, including any surplus expected during the window) and derives the battery level needed (+ margin, capped). Above that level the battery powers the home as usual, even off-peak: nothing is bought. It hands over to the (off-peak) grid only when it drops to that level, and it is charged from the grid (`huawei_solar.forcible_charge_soc`) only when below it. A fixed target is also possible.
+- **Car charging: battery for the home, grid for the car.** Discharge power is limited to the home's consumption (rounded up to 250 W) while the car charges, then restored.
 - **EV charging off-peak** (option): switches the charger to normal charging at the start of the window and back to PV preferred at the end.
 - While auto mode is on, the old off-peak charging automations are disabled; they are re-enabled when it is turned off.
 

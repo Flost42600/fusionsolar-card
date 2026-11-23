@@ -11,7 +11,7 @@
  * Toutes les entités ont une valeur par défaut (ton installation) et peuvent être remplacées via `entities:`.
  */
 
-const FS_VERSION = "1.1.0";
+const FS_VERSION = "1.2.0";
 
 /* ------------------------------------------------------------------------------------------ */
 /*  Entités par défaut                                                                        */
@@ -68,6 +68,7 @@ const FS_DEFAULTS = {
   pilot_need: "sensor.fusionsolar_pilotage_besoin",
   pilot_in_hc: "binary_sensor.fusionsolar_pilotage_en_hc",
   pilot_block: "binary_sensor.fusionsolar_pilotage_bloquer_decharge",
+  pilot_limit: "sensor.fusionsolar_pilotage_limite_decharge",
   pilot_automation: "automation.fusionsolar_pilotage_auto_heures_creuses",
   hc1_start: "input_datetime.fusionsolar_hc1_debut",
   hc1_end: "input_datetime.fusionsolar_hc1_fin",
@@ -669,27 +670,27 @@ const FS_I18N = {
     pil_missing: "Les entités du pilotage automatique sont introuvables dans Home Assistant (voir README, section Pilotage).",
     pil_auto: "Mode auto", pil_on: "Activé", pil_off: "Désactivé",
     pil_st: { off: "Mode auto désactivé", attente: "En attente des heures creuses", charge: "Charge de la batterie depuis le réseau",
-      ve: "VE en charge : batterie préservée", preserve: "Heures creuses : batterie préservée", hc: "Heures creuses : rien à faire" },
+      ve: "VE en charge : la batterie alimente la maison seule", preserve: "Heures creuses : batterie gardée pour la suite", hc: "Heures creuses : la batterie suffit" },
     pil_d_off: "Active le mode auto pour gérer la batterie et la recharge en heures creuses. Tant qu'il est actif, les anciennes automatisations de charge HC sont désactivées.",
     pil_d_attente: "Prochaine plage {a}–{b} · cible prévue {c} % (batterie {soc} %)",
     pil_d_charge: "Jusqu'à {c} % à {p} · batterie {soc} % · fin de plage {b}",
-    pil_d_ve: "La maison et la voiture sont alimentées par le réseau, la batterie ne se décharge pas.",
-    pil_d_preserve: "La maison tourne sur le réseau (tarif creux) jusqu'à {b} ; la batterie ({soc} %) est gardée pour les heures pleines.",
-    pil_d_hc: "Batterie à {soc} %, cible {c} % atteinte · fin de plage {b}",
+    pil_d_ve: "Décharge limitée à {w}, soit la consommation de la maison : la voiture charge sur le réseau, la maison reste sur la batterie.",
+    pil_d_preserve: "Batterie ({soc} %) au niveau nécessaire jusqu'à la prochaine plage ({c} %) : la maison passe sur le réseau au tarif creux jusqu'à {b}.",
+    pil_d_hc: "Batterie à {soc} %, au-dessus du niveau nécessaire ({c} %) : elle alimente la maison, pas de réseau · fin de plage {b}",
     pil_auto_off_warn: "L'automatisation de pilotage est désactivée dans Home Assistant : le mode auto n'agit pas.",
     pk_target: "Cible", pk_target_s: "besoin {k} kWh jusqu'à la prochaine plage", pk_soc: "Batterie", pk_win: "Plage", pk_win_cur: "en cours, fin {b}", pk_win_next: "prochaine",
-    pk_block: "Décharge", pk_block_on: "bloquée", pk_block_off: "autorisée",
+    pk_block: "Décharge", pk_block_on: "bloquée", pk_block_off: "normale", pk_block_lim: "limitée", pk_block_on_s: "batterie insuffisante", pk_block_lim_s: "maison seule (VE en charge)",
     ps_hc: "Heures creuses", ps_hc1: "Plage 1", ps_hc2: "Plage 2",
     ps_bat: "Charge de la batterie", ps_charge: "Charger la batterie en heures creuses si nécessaire",
     ps_mode: "Calcul de la cible", ps_modes: { "Prévision": "Selon prévision solaire", "Fixe": "Valeur fixe" },
     ps_fixed: "Cible fixe", ps_max: "Cible maximale", ps_margin: "Marge de sécurité", ps_power: "Puissance de charge réseau",
-    ps_prot: "Protection de la batterie", ps_preserve: "Ne pas décharger la batterie pendant les heures creuses",
-    ps_protect_ev: "Ne pas décharger la batterie quand le véhicule charge", ps_dis: "Puissance de décharge normale",
+    ps_prot: "Protection de la batterie", ps_preserve: "En heures creuses, garder la batterie dès qu'elle descend au niveau nécessaire pour la suite",
+    ps_protect_ev: "Quand le véhicule charge, la batterie alimente la maison mais pas la voiture", ps_dis: "Puissance de décharge normale",
     ps_ev: "Véhicule", ps_ev_hc: "Lancer la recharge du véhicule au début des heures creuses",
     ps_ev_note: "Laisse cette option coupée si d'autres automatisations gèrent déjà la recharge de nuit.",
     ps_est: "Estimation de la consommation", ps_src: "Consommation de la maison", ps_srcs: { "Moyenne du mois": "Moyenne du mois (hors VE)", "Valeur fixe": "Valeur fixe" },
     ps_day: "Consommation par jour", ps_pvf: "Part du solaire prévu prise en compte", ps_cap: "Capacité de la batterie",
-    ps_how: "Comment ça marche : à chaque plage creuse, le pilotage estime l'énergie dont la maison aura besoin jusqu'à la plage suivante (consommation moyenne moins le solaire prévu par Solcast), en déduit un niveau de batterie cible, puis force la charge depuis le réseau jusqu'à ce niveau. Pendant les heures creuses et pendant la charge du véhicule, la puissance de décharge est mise à 0 W pour garder la batterie ; elle est rétablie ensuite.",
+    ps_how: "Comment ça marche : à chaque plage creuse, le pilotage estime l'énergie dont la maison aura besoin entre la fin de la plage et la plage suivante (consommation moyenne moins le solaire prévu par Solcast) et en déduit le niveau de batterie nécessaire. Si la batterie est au-dessus, elle alimente la maison normalement : aucun achat au réseau. Elle ne passe la main au réseau (tarif creux) qu'une fois descendue à ce niveau, et n'est chargée depuis le réseau que si elle est en dessous. Quand le véhicule charge, la décharge est limitée à la consommation de la maison : la voiture prend le réseau, la maison reste sur la batterie.",
     st_selfuse: "Autoconsommation", st_export: "Surplus injecté", st_mixed: "Solaire + réseau", st_battery: "Sur batterie",
     st_gridchg: "Charge batterie réseau", st_grid: "Réseau", st_idle: "Veille",
     inv_ok: "Raccordé", inv_standby: "Veille", inv_off: "Arrêt", inv_fault: "Défaut",
@@ -764,27 +765,27 @@ const FS_I18N = {
     pil_missing: "Auto control entities were not found in Home Assistant (see README, Control section).",
     pil_auto: "Auto mode", pil_on: "On", pil_off: "Off",
     pil_st: { off: "Auto mode off", attente: "Waiting for off-peak hours", charge: "Charging battery from the grid",
-      ve: "EV charging: battery protected", preserve: "Off-peak: battery preserved", hc: "Off-peak: nothing to do" },
+      ve: "EV charging: battery powers the home only", preserve: "Off-peak: battery kept for later", hc: "Off-peak: battery is enough" },
     pil_d_off: "Turn on auto mode to manage the battery and charging during off-peak hours. While it is on, the old off-peak charging automations are disabled.",
     pil_d_attente: "Next window {a}–{b} · planned target {c}% (battery {soc}%)",
     pil_d_charge: "Up to {c}% at {p} · battery {soc}% · window ends {b}",
-    pil_d_ve: "Home and car run on the grid, the battery does not discharge.",
-    pil_d_preserve: "The home runs on the grid (off-peak rate) until {b}; the battery ({soc}%) is kept for peak hours.",
-    pil_d_hc: "Battery at {soc}%, target {c}% reached · window ends {b}",
+    pil_d_ve: "Discharge limited to {w}, the home's consumption: the car charges from the grid, the home stays on the battery.",
+    pil_d_preserve: "Battery ({soc}%) at the level needed until the next window ({c}%): the home runs on off-peak grid power until {b}.",
+    pil_d_hc: "Battery at {soc}%, above the level needed ({c}%): it powers the home, no grid · window ends {b}",
     pil_auto_off_warn: "The control automation is disabled in Home Assistant: auto mode has no effect.",
     pk_target: "Target", pk_target_s: "{k} kWh needed until the next window", pk_soc: "Battery", pk_win: "Window", pk_win_cur: "active, ends {b}", pk_win_next: "next",
-    pk_block: "Discharge", pk_block_on: "blocked", pk_block_off: "allowed",
+    pk_block: "Discharge", pk_block_on: "blocked", pk_block_off: "normal", pk_block_lim: "limited", pk_block_on_s: "battery insufficient", pk_block_lim_s: "home only (EV charging)",
     ps_hc: "Off-peak hours", ps_hc1: "Window 1", ps_hc2: "Window 2",
     ps_bat: "Battery charging", ps_charge: "Charge the battery off-peak when needed",
     ps_mode: "Target calculation", ps_modes: { "Prévision": "From solar forecast", "Fixe": "Fixed value" },
     ps_fixed: "Fixed target", ps_max: "Maximum target", ps_margin: "Safety margin", ps_power: "Grid charging power",
-    ps_prot: "Battery protection", ps_preserve: "Do not discharge the battery during off-peak hours",
-    ps_protect_ev: "Do not discharge the battery while the car charges", ps_dis: "Normal discharge power",
+    ps_prot: "Battery protection", ps_preserve: "Off-peak, keep the battery once it drops to the level needed for later",
+    ps_protect_ev: "While the car charges, the battery powers the home but not the car", ps_dis: "Normal discharge power",
     ps_ev: "Vehicle", ps_ev_hc: "Start car charging at the beginning of off-peak hours",
     ps_ev_note: "Leave this off if your own night charging automations stay active.",
     ps_est: "Consumption estimate", ps_src: "Home consumption", ps_srcs: { "Moyenne du mois": "Monthly average (excl. EV)", "Valeur fixe": "Fixed value" },
     ps_day: "Consumption per day", ps_pvf: "Share of forecast solar counted", ps_cap: "Battery capacity",
-    ps_how: "How it works: for each off-peak window, the control estimates the energy the home will need until the next window (average consumption minus Solcast forecast solar), derives a battery target, then forces grid charging up to that level. During off-peak hours and while the car charges, discharge power is set to 0 W to keep the battery; it is restored afterwards.",
+    ps_how: "How it works: for each off-peak window, the control estimates the energy the home will need between the end of the window and the next one (average consumption minus Solcast forecast solar) and derives the battery level needed. Above that level the battery powers the home as usual: nothing is bought from the grid. It hands over to the (off-peak) grid only once it drops to that level, and is charged from the grid only when below it. While the car charges, discharge is limited to the home's consumption: the car uses the grid, the home stays on the battery.",
     st_selfuse: "Self-consumption", st_export: "Exporting surplus", st_mixed: "Solar + grid", st_battery: "On battery",
     st_gridchg: "Grid charging battery", st_grid: "Grid", st_idle: "Idle",
     inv_ok: "On-grid", inv_standby: "Standby", inv_off: "Off", inv_fault: "Fault",
@@ -2197,7 +2198,7 @@ const FsPilotMixin = {
     if (st === "off") d = t("pil_d_off");
     else if (st === "attente") d = nxt ? t("pil_d_attente", { a: this._hm(nxt[0]), b: this._hm(nxt[1]), c, soc }) : "";
     else if (st === "charge") d = t("pil_d_charge", { c, p: this._W(pw), soc, b: cur ? this._hm(cur[1]) : "—" });
-    else if (st === "ve") d = t("pil_d_ve");
+    else if (st === "ve") d = t("pil_d_ve", { w: this._W(this._n("pilot_limit")) });
     else if (st === "preserve") d = t("pil_d_preserve", { soc, b: cur ? this._hm(cur[1]) : "—" });
     else if (st === "hc") d = t("pil_d_hc", { soc, c, b: cur ? this._hm(cur[1]) : "—" });
     return { st, auto, label: (L && L[st]) || st, detail: d, col: FS_PIL_COL[st] || FS_COL.idle, live: ["charge", "ve", "preserve"].includes(st) };
@@ -2293,9 +2294,10 @@ const FsPilotMixin = {
     const w = cur || nxt;
     setH("p_k_win", w ? `${this._hm(w[0])}–${this._hm(w[1])}` : "—");
     set("p_k_win_s", cur ? t("pk_win_cur", { b: this._hm(cur[1]) }) : nxt ? t("pk_win_next") : "");
-    const blk = this._s("pilot_block") === "on";
-    setH("p_k_block", t(blk ? "pk_block_on" : "pk_block_off"));
-    set("p_k_block_s", blk ? (this._on("pilot_in_hc") ? t("ps_hc") : t("ps_ev")) : "");
+    const lim = this._n("pilot_limit"), norm = this._n("discharge_normal") ?? 5000;
+    if (lim != null && S.auto && lim <= 0) { setH("p_k_block", t("pk_block_on")); set("p_k_block_s", t("pk_block_on_s")); }
+    else if (lim != null && S.auto && lim < norm) { setH("p_k_block", `${t("pk_block_lim")} <small>${this._W(lim)}</small>`); set("p_k_block_s", t("pk_block_lim_s")); }
+    else { setH("p_k_block", t("pk_block_off")); set("p_k_block_s", this._W(norm)); }
     // interrupteurs
     el.querySelectorAll("[data-sw]").forEach((b) => b.setAttribute("aria-checked", String(this._on(b.dataset.sw))));
     // champs

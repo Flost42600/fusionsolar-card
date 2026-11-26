@@ -11,7 +11,7 @@
  * Toutes les entités ont une valeur par défaut (ton installation) et peuvent être remplacées via `entities:`.
  */
 
-const FS_VERSION = "1.3.0";
+const FS_VERSION = "1.4.0";
 
 /* ------------------------------------------------------------------------------------------ */
 /*  Entités par défaut                                                                        */
@@ -677,6 +677,17 @@ text{paint-order:stroke;stroke:#16191d;stroke-width:4px;stroke-linejoin:round;fo
 .nlog ul{list-style:none;margin:0;padding:0;font-size:12.5px;color:#c9d1da}
 .nlog li{display:grid;grid-template-columns:110px 1fr;gap:10px;padding:6px 0;border-top:1px solid rgba(255,255,255,.05);line-height:1.4}
 .nlog li:first-child{border-top:0}.nlog .nt{color:#7f8994;white-space:nowrap}
+.zpan{margin-bottom:0}.zk .ts{white-space:normal;line-height:1.35}
+.zinst{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:8px;margin-top:8px}
+.zi{background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:8px 10px;min-width:0}
+.zi .tl{display:block}.zi b{font-size:13.5px;font-weight:600;display:block;margin-top:2px;line-height:1.35}
+.ztab{margin-top:8px}.ztab tr.cur td{color:#9aa3ad}.ztab tr.best td{background:rgba(61,220,132,.1);color:#e6e9ee;font-weight:600}
+.ztag{font-size:10.5px;font-weight:600;padding:1px 6px;border-radius:999px;background:rgba(255,255,255,.08);color:#9aa3ad;margin-left:4px}
+.zmat{min-width:420px}.zmat td,.zmat th{text-align:center}.zmat td:first-child,.zmat th:first-child{text-align:left}
+.zmat td b{display:block;font-size:13.5px}.zmat td small{display:block;font-size:11px;color:#9aa3ad}
+.zmat td.good{background:rgba(61,220,132,.16)}.zmat td.mid{background:rgba(255,197,49,.1)}.zmat td.cur{background:rgba(255,255,255,.05)}
+.zmat td.best{background:rgba(178,141,255,.28);outline:2px solid #b28dff;outline-offset:-2px;border-radius:6px}
+.pin[type=text]{color-scheme:dark}
 @container (max-width:480px){.ntab .nc{display:none}.ntab th,.ntab td{padding:5px 4px}}
 @container (max-width:560px){.ncols{grid-template-columns:1fr}.nlog li{grid-template-columns:1fr;gap:2px}.nhead{grid-template-columns:1fr}}
 @container (max-width:720px){.pgrid{grid-template-columns:1fr}}
@@ -838,6 +849,71 @@ const FS_I18N = {
     s_direct: "Maison", s_tobat: "Batterie", s_exp: "Réseau", s_fpv: "Solaire", s_fbat: "Batterie", s_fgrid: "Réseau", s_gridbat: "dont {k} kWh réseau → batterie",
     mir_title: "Production et consommation", mir_sub: "Au-dessus : destination du solaire · en dessous : origine de la consommation",
     until: "jusqu'à {h}",
+    tab_siz: "Installation",
+    sz_install: "Ton installation", sz_edit: "Modifier l'installation", sz_edit_close: "Fermer", sz_copied: "Copié",
+    sz_period: "Analyse sur {n} jours, du {a} au {b}",
+    sz_short: "Pas encore assez d'historique (au moins 20 jours de statistiques horaires) pour proposer une évolution.",
+    sz_or: { E: "Est", SE: "Sud-Est", S: "Sud", SW: "Sud-Ouest", W: "Ouest", NE: "Nord-Est", NW: "Nord-Ouest" },
+    sz_o: { ew: "Est-Ouest", e: "Est", w: "Ouest", s: "Sud", s60: "Sud, incliné 60°" },
+    sz_inv: "Onduleur", sz_bat: "Batterie",
+    sz_est: "Puissance crête non renseignée : ≈ {k} kWc estimés d'après tes journées les plus ensoleillées. Indique la vraie valeur dans « Modifier l'installation » pour des résultats plus justes.",
+    sz_name: "Nom", sz_kwp: "Puissance crête", sz_az: "Orientation", sz_tilt: "Inclinaison",
+    sz_invkw: "Puissance AC de l'onduleur", sz_mppt_t: "Entrées MPPT", sz_mppt_u: "Entrées MPPT utilisées",
+    sz_batkwh: "Capacité batterie", sz_batkw: "Puissance batterie (charge / décharge)", sz_mod: "Capacité d'un module", sz_modmax: "Modules max par pile", sz_stackmax: "Piles max par onduleur",
+    sz_batev: "La batterie peut alimenter la voiture",
+    sz_eco: "Prix et coûts", sz_php: "Achat heures pleines", sz_phc: "Achat heures creuses", sz_pexp: "Revente du surplus",
+    sz_cpv: "Coût d'une extension PV (posée)", sz_cbat: "Coût d'un kWh de batterie (posé)", sz_cstack: "Coût d'une seconde pile (module de puissance)",
+    sz_years: "Durée de vie de la batterie", sz_years_pv: "Durée de vie des panneaux", sz_yr: "an", sz_step: "Pas d'extension PV", sz_tiltnew: "Inclinaison des panneaux ajoutés",
+    sz_save_note: "Ces réglages sont gardés dans ce navigateur. Pour les garder partout, copie-les dans la configuration de la carte (option installation:).",
+    sz_copy: "Copier la configuration YAML", sz_reset: "Revenir aux valeurs par défaut",
+    sz_k_prod: "Production", sz_k_spec: "{s} kWh par kWc", sz_k_cons: "Consommation", sz_k_hp: "dont PAC {p} %", sz_k_exp: "{e} kWh injectés par an",
+    sz_k_sim: "simulé sans charge réseau : {p} %", sz_k_bill: "Facture réseau", sz_k_bill_s: "achats moins revente, simulés",
+    sz_k_full: "pleine {a} j · vide {b} j sur {n}",
+    sz_yrs: "{n} ans", sz_never: "plus de 40 ans",
+    sz_partial_h: "Données partielles", sz_partial_v: "Analyse sur {n} jours seulement",
+    sz_partial_t: "Les chiffres annuels sont extrapolés depuis la période disponible. L'hiver (consommation de la PAC élevée, peu de soleil) et l'été (gros surplus) pèsent beaucoup dans le résultat : les propositions s'affineront au fil des mois.",
+    sz_bat_diag: "Surplus injecté batterie pleine : ≈ {e} kWh/an. Achats batterie vide : ≈ {i} kWh/an.",
+    sz_bat_days: "Mesuré : batterie pleine {a} jours, vide {b} jours sur {n}.",
+    sz_p_bat: "Stockage",
+    sz_p_bat_v: "Passer à {c} kWh (+{d} kWh)",
+    sz_p_bat_t: "+{a} points d'autosuffisance, {i} kWh de moins achetés par an, ≈ {g} €/an. Coût ≈ {c} €, retour ≈ {p}.",
+    sz_p_stack: "Cette capacité demande une seconde pile (module de puissance en plus).",
+    sz_p_bat_keep: "Garder {c} kWh",
+    sz_p_bat_keep_t: "Un module de {m} kWh en plus ne ferait acheter que {x} kWh de moins par an (≈ {g} €/an), soit un retour de {p}. Même portée à {c} kWh, le maximum possible, la batterie ne ferait acheter que ≈ {l} kWh de moins par an : le surplus tombe surtout en été, quand la batterie ne se vide pas, et les achats en hiver, quand il n'y a pas de surplus à stocker.",
+    sz_p_bat_max: "Batterie déjà au maximum ({c} kWh)",
+    sz_mppt_full: "Les entrées MPPT de l'onduleur sont toutes utilisées : une extension se fait en micro-onduleurs ou avec un onduleur séparé (couplage AC). Le surplus mesuré au compteur charge quand même la batterie.",
+    sz_mppt_free: "Une entrée MPPT de l'onduleur est libre : une chaîne de panneaux peut y être raccordée, dans la limite de puissance DC de l'onduleur.",
+    sz_cmp: "{o} : ≈ {a} €/an, contre ≈ {c} €/an en {b}.",
+    sz_p_pv: "Panneaux",
+    sz_p_pv_v: "Ajouter {k} kWc orientés {o}",
+    sz_p_pv_t: "≈ {e} kWh/an de plus, dont {s} % consommés sur place. +{a} points d'autosuffisance, ≈ {g} €/an. Coût ≈ {c} €, retour ≈ {p}.",
+    sz_why_ew: "L'Est-Ouest étale la production sur le matin et la fin de journée, quand la maison consomme, au lieu de l'empiler à midi quand la batterie est déjà pleine.",
+    sz_why_e: "L'Est produit tôt le matin, quand la batterie est basse et que la maison démarre.",
+    sz_why_w: "L'Ouest produit en fin de journée, au moment du pic de consommation du soir.",
+    sz_why_s: "Le Sud maximise la production totale, mais concentre le surplus à midi.",
+    sz_why_s60: "Une forte inclinaison plein Sud (façade, garde-corps) produit moins l'été mais nettement plus l'hiver, quand la PAC consomme.",
+    sz_p_pv_no: "Pas d'extension rentable pour l'instant",
+    sz_p_pv_no_t: "L'option la plus intéressante ({k} kWc {o}) ne serait consommée sur place qu'à {s} % : le reste serait revendu à {x} €/kWh. Gain ≈ {g} €/an pour ≈ {c} €, retour {p} : au-delà du seuil retenu ({n} ans).",
+    sz_p_combo: "Combinaison",
+    sz_p_combo_v: "+{k} kWc {o} et batterie {c} kWh",
+    sz_p_combo_t: "Autosuffisance {a} % (+{d} points), ≈ {g} €/an. Coût ≈ {c} €, retour ≈ {p}. Une fois l'investissement remboursé sur 60 % de sa durée de vie (panneaux {yp} ans, batterie {yb} ans), il reste ≈ {v} €/an : mieux que chaque option seule.",
+    sz_p_use: "Sans investir",
+    sz_p_use_v: "{e} kWh de surplus injectés par an",
+    sz_p_use_t: "Chaque kWh consommé au moment du surplus plutôt que racheté rapporte ≈ {g} €. Déplacer un cinquième du surplus (eau chaude de la PAC à midi, voiture en « Solaire prioritaire », lave-linge, lave-vaisselle) rapporterait ≈ {x} €/an.",
+    sz_now: "actuel", sz_2stack: "2e pile", sz_none: "Aucun",
+    sz_bat_title: "Stockage : quelle capacité ?", sz_bat_sub: "Modules de {m} kWh, {n} par pile, {s} piles au maximum ({x} kWh). Simulation heure par heure sur tes données, en autoconsommation pure.",
+    sz_c_cap: "Capacité", sz_c_imp: "Achat réseau/an", sz_c_gain: "Gain/an", sz_c_cost: "Coût", sz_c_pay: "Retour (ans)",
+    sz_pv_title: "Panneaux : quelle orientation ?", sz_pv_sub: "Panneaux ajoutés inclinés à {t}°, production calculée à partir de ta production réelle jour par jour.",
+    sz_c_or: "Orientation", sz_c_prod: "Production en plus", sz_c_selfadd: "Consommée sur place",
+    sz_clip: "Ton onduleur plafonne déjà ≈ {h} heures par an : l'extension doit passer par un autre onduleur ou des micro-onduleurs.",
+    sz_c_pvadd: "Panneaux ajoutés", sz_combo_title: "Combinaisons panneaux et stockage",
+    sz_combo_sub: "Autosuffisance et gain par an, panneaux orientés {o}. Survole une case pour le détail. Meilleur bilan net encadré.",
+    sz_l_good: "retour ≤ 8 ans", sz_l_mid: "retour ≤ 12 ans", sz_l_best: "meilleur bilan",
+    sz_prof_high: "Journée type, mois ensoleillés", sz_prof_low: "Journée type, mois sombres", sz_prof_sub: "Moyenne par heure ({m}) : production actuelle, panneaux ajoutés et consommation de la maison hors voiture.",
+    sz_l_pvnow: "Production actuelle", sz_l_pvadd: "+{k} kWc {o}", sz_l_house: "Maison hors voiture",
+    sz_month_title: "Autosuffisance par mois", sz_month_sub: "Installation actuelle simulée et meilleure proposition.",
+    sz_l_now: "Actuelle", sz_l_prop: "Proposition",
+    sz_how: "Méthode : statistiques horaires des 12 derniers mois. La production des panneaux ajoutés suit ta production réelle de chaque journée (même météo), répartie selon la course du soleil à ta position ({lat}, {lon}) pour l'orientation choisie ; les jours couverts, l'orientation compte moins. La batterie est simulée en autoconsommation pure (sans charge réseau en heures creuses), avec le rendement mesuré de ta batterie. Une option est retenue si elle se rembourse en moins de 60 % de sa durée de vie ({np} ans pour les panneaux, {nb} ans pour la batterie). Ombrages, dégradation et évolution des prix ne sont pas pris en compte : c'est un ordre de grandeur pour comparer les options, pas une étude d'installateur.",
   },
   en: {
     default_title: "FusionSolar", aria: "Solar installation energy flow",
@@ -985,6 +1061,67 @@ const FS_I18N = {
     s_direct: "Home", s_tobat: "Battery", s_exp: "Grid", s_fpv: "Solar", s_fbat: "Battery", s_fgrid: "Grid", s_gridbat: "incl. {k} kWh grid → battery",
     mir_title: "Production and consumption", mir_sub: "Above: where solar goes · below: where consumption comes from",
     until: "until {h}",
+    tab_siz: "Installation",
+    sz_install: "Your installation", sz_edit: "Edit installation", sz_edit_close: "Close", sz_copied: "Copied",
+    sz_period: "Analysis over {n} days, {a} to {b}",
+    sz_short: "Not enough history yet (at least 20 days of hourly statistics) to suggest upgrades.",
+    sz_or: { E: "East", SE: "South-East", S: "South", SW: "South-West", W: "West", NE: "North-East", NW: "North-West" },
+    sz_o: { ew: "East-West", e: "East", w: "West", s: "South", s60: "South, 60° tilt" },
+    sz_inv: "Inverter", sz_bat: "Battery",
+    sz_est: "Peak power not set: ≈ {k} kWp estimated from your sunniest days. Enter the real value under \"Edit installation\" for better results.",
+    sz_name: "Name", sz_kwp: "Peak power", sz_az: "Orientation", sz_tilt: "Tilt",
+    sz_invkw: "Inverter AC power", sz_mppt_t: "MPPT inputs", sz_mppt_u: "MPPT inputs used",
+    sz_batkwh: "Battery capacity", sz_batkw: "Battery power (charge / discharge)", sz_mod: "Module capacity", sz_modmax: "Max modules per stack", sz_stackmax: "Max stacks per inverter",
+    sz_batev: "The battery may power the car",
+    sz_eco: "Prices and costs", sz_php: "Peak purchase price", sz_phc: "Off-peak purchase price", sz_pexp: "Surplus feed-in price",
+    sz_cpv: "PV extension cost (installed)", sz_cbat: "Battery cost per kWh (installed)", sz_cstack: "Second stack cost (power module)",
+    sz_years: "Battery lifetime", sz_years_pv: "Panel lifetime", sz_yr: "yr", sz_step: "PV extension step", sz_tiltnew: "Tilt of added panels",
+    sz_save_note: "These settings are kept in this browser. To keep them everywhere, copy them into the card configuration (installation: option).",
+    sz_copy: "Copy YAML configuration", sz_reset: "Reset to defaults",
+    sz_k_prod: "Production", sz_k_spec: "{s} kWh per kWp", sz_k_cons: "Consumption", sz_k_hp: "incl. heat pump {p}%", sz_k_exp: "{e} kWh exported per year",
+    sz_k_sim: "simulated without grid charging: {p}%", sz_k_bill: "Grid bill", sz_k_bill_s: "purchases minus feed-in, simulated",
+    sz_k_full: "full {a} d · empty {b} d of {n}",
+    sz_yrs: "{n} years", sz_never: "over 40 years",
+    sz_partial_h: "Partial data", sz_partial_v: "Analysis over {n} days only",
+    sz_partial_t: "Yearly figures are extrapolated from the available period. Winter (high heat pump use, little sun) and summer (large surplus) weigh heavily: suggestions will improve over the months.",
+    sz_bat_diag: "Surplus exported with a full battery: ≈ {e} kWh/yr. Purchases with an empty battery: ≈ {i} kWh/yr.",
+    sz_bat_days: "Measured: battery full {a} days, empty {b} days out of {n}.",
+    sz_p_bat: "Storage", sz_p_bat_v: "Go to {c} kWh (+{d} kWh)",
+    sz_p_bat_t: "+{a} points of self-sufficiency, {i} kWh less bought per year, ≈ €{g}/yr. Cost ≈ €{c}, payback ≈ {p}.",
+    sz_p_stack: "This capacity needs a second stack (extra power module).",
+    sz_p_bat_keep: "Keep {c} kWh",
+    sz_p_bat_keep_t: "One more {m} kWh module would only save {x} kWh of purchases per year (≈ €{g}/yr), a payback of {p}. Even at {c} kWh, the maximum, it would only save ≈ {l} kWh of purchases per year: surplus mostly comes in summer, when the battery does not empty, and purchases in winter, when there is no surplus to store.",
+    sz_p_bat_max: "Battery already at its maximum ({c} kWh)",
+    sz_mppt_full: "All inverter MPPT inputs are used: an extension needs micro-inverters or a separate inverter (AC coupling). Surplus measured at the meter still charges the battery.",
+    sz_mppt_free: "One inverter MPPT input is free: a panel string can be connected there, within the inverter's DC power limit.",
+    sz_cmp: "{o}: ≈ €{a}/yr, versus ≈ €{c}/yr facing {b}.",
+    sz_p_pv: "Panels", sz_p_pv_v: "Add {k} kWp facing {o}",
+    sz_p_pv_t: "≈ {e} kWh/yr more, {s}% used on site. +{a} points of self-sufficiency, ≈ €{g}/yr. Cost ≈ €{c}, payback ≈ {p}.",
+    sz_why_ew: "East-West spreads production over the morning and late afternoon, when the home consumes, instead of stacking it at noon when the battery is already full.",
+    sz_why_e: "East produces early in the morning, when the battery is low and the home wakes up.",
+    sz_why_w: "West produces late in the day, during the evening consumption peak.",
+    sz_why_s: "South maximises total production but concentrates surplus at noon.",
+    sz_why_s60: "A steep south tilt (facade, railing) produces less in summer but much more in winter, when the heat pump runs.",
+    sz_p_pv_no: "No worthwhile extension for now",
+    sz_p_pv_no_t: "The best option ({k} kWp {o}) would only be {s}% used on site: the rest would be sold at €{x}/kWh. Gain ≈ €{g}/yr for ≈ €{c}, payback {p}: beyond the threshold used ({n} years).",
+    sz_p_combo: "Combination", sz_p_combo_v: "+{k} kWp {o} and {c} kWh battery",
+    sz_p_combo_t: "Self-sufficiency {a}% (+{d} points), ≈ €{g}/yr. Cost ≈ €{c}, payback ≈ {p}. With the investment repaid over 60% of its lifetime (panels {yp} yrs, battery {yb} yrs), ≈ €{v}/yr remains: better than either option alone.",
+    sz_p_use: "Without investing", sz_p_use_v: "{e} kWh of surplus exported per year",
+    sz_p_use_t: "Each kWh used during the surplus instead of bought back saves ≈ €{g}. Shifting a fifth of the surplus (heat pump hot water at noon, car on \"PV preferred\", washing machine, dishwasher) would save ≈ €{x}/yr.",
+    sz_now: "current", sz_2stack: "2nd stack", sz_none: "None",
+    sz_bat_title: "Storage: what capacity?", sz_bat_sub: "{m} kWh modules, {n} per stack, up to {s} stacks ({x} kWh). Hour-by-hour simulation on your data, pure self-consumption.",
+    sz_c_cap: "Capacity", sz_c_imp: "Grid purchase/yr", sz_c_gain: "Gain/yr", sz_c_cost: "Cost", sz_c_pay: "Payback (yrs)",
+    sz_pv_title: "Panels: which orientation?", sz_pv_sub: "Added panels tilted {t}°, production derived from your actual daily production.",
+    sz_c_or: "Orientation", sz_c_prod: "Extra production", sz_c_selfadd: "Used on site",
+    sz_clip: "Your inverter already clips ≈ {h} hours per year: an extension needs another inverter or micro-inverters.",
+    sz_c_pvadd: "Added panels", sz_combo_title: "Panels and storage combinations",
+    sz_combo_sub: "Self-sufficiency and yearly gain, panels facing {o}. Hover a cell for details. Best net result outlined.",
+    sz_l_good: "payback ≤ 8 yrs", sz_l_mid: "payback ≤ 12 yrs", sz_l_best: "best result",
+    sz_prof_high: "Typical day, sunny months", sz_prof_low: "Typical day, dark months", sz_prof_sub: "Hourly average ({m}): current production, added panels and home consumption excluding the car.",
+    sz_l_pvnow: "Current production", sz_l_pvadd: "+{k} kWp {o}", sz_l_house: "Home excl. car",
+    sz_month_title: "Self-sufficiency by month", sz_month_sub: "Simulated current installation and best suggestion.",
+    sz_l_now: "Current", sz_l_prop: "Suggestion",
+    sz_how: "Method: hourly statistics for the last 12 months. Added panels follow your actual production each day (same weather), spread along the sun's path at your location ({lat}, {lon}) for the chosen orientation; on cloudy days orientation matters less. The battery is simulated in pure self-consumption (no off-peak grid charging), with your battery's measured efficiency. An option is kept if it pays back within 60% of its lifetime ({np} years for panels, {nb} years for the battery). Shading, degradation and price changes are not modelled: this is an order of magnitude to compare options, not an installer's study.",
   },
 };
 
@@ -1050,7 +1187,7 @@ class FusionSolarCard extends HTMLElement {
         <div class="hdr" id="hdr">
           <div class="hname"><div><div class="name" id="h_name"></div><div class="subt" id="h_sub"></div></div>
             <div class="tabs" id="tabs" role="tablist">
-              <button role="tab" data-tab="flow" id="tab_f"></button><button role="tab" data-tab="plan" id="tab_n"></button><button role="tab" data-tab="pil" id="tab_p"></button><button role="tab" data-tab="opt" id="tab_o"></button><button role="tab" data-tab="rec" id="tab_r"></button>
+              <button role="tab" data-tab="flow" id="tab_f"></button><button role="tab" data-tab="plan" id="tab_n"></button><button role="tab" data-tab="pil" id="tab_p"></button><button role="tab" data-tab="opt" id="tab_o"></button><button role="tab" data-tab="rec" id="tab_r"></button><button role="tab" data-tab="siz" id="tab_z"></button>
             </div></div>
           <div class="chips">
             <span class="badge bad" id="b_alarm"></span><span class="badge warn" id="b_evoff"></span>
@@ -1075,6 +1212,7 @@ class FusionSolarCard extends HTMLElement {
         <div class="view pane" id="v_pil"><div id="p_body"></div></div>
         <div class="view pane" id="v_opt"><div class="obar" id="o_bar"></div><div id="o_body"></div></div>
         <div class="view pane" id="v_rec"><div class="obar" id="r_bar"></div><div id="r_body"></div></div>
+        <div class="view pane" id="v_siz"><div class="obar" id="z_bar"></div><div id="z_body"></div></div>
         <div class="vtip" id="vtip"></div>
       </ha-card>`;
     const t = (k) => this._t(k);
@@ -1086,7 +1224,7 @@ class FusionSolarCard extends HTMLElement {
 
     root.addEventListener("click", (ev) => {
       const path = ev.composedPath();
-      if (path.some((n) => n.id === "v_opt" || n.id === "v_rec" || n.id === "v_pil" || n.id === "v_plan")) return;
+      if (path.some((n) => n.id === "v_opt" || n.id === "v_rec" || n.id === "v_pil" || n.id === "v_plan" || n.id === "v_siz")) return;
       if (path.some((n) => n.id === "b_auto")) { this._pilToggle(); return; }
       if (path.some((n) => n.id === "pban")) { this._setTab("plan"); return; }
       const tabEl = path.find((n) => n.dataset && n.dataset.tab && n.classList && n.classList.contains("tile"));
@@ -1104,6 +1242,7 @@ class FusionSolarCard extends HTMLElement {
     });
     this._paneInit();
     this._pilInit();
+    this._szInit();
     const card = root.querySelector("ha-card");
     if (window.ResizeObserver) {
       this._ro = new ResizeObserver((ent) => {
@@ -1147,15 +1286,18 @@ class FusionSolarCard extends HTMLElement {
     r.getElementById("tab_n").classList.toggle("hide", this._config.show_pilot === false || !this._hasPilot());
     r.getElementById("tab_o").classList.toggle("hide", this._config.show_optimization === false);
     r.getElementById("tab_r").classList.toggle("hide", this._config.show_recap === false);
-    const noTabs = this._config.show_optimization === false && this._config.show_recap === false && (this._config.show_pilot === false || !this._hasPilot());
+    r.getElementById("tab_z").textContent = this._t("tab_siz");
+    r.getElementById("tab_z").classList.toggle("hide", this._config.show_sizing === false);
+    const noTabs = this._config.show_optimization === false && this._config.show_recap === false && this._config.show_sizing === false && (this._config.show_pilot === false || !this._hasPilot());
     r.getElementById("tabs").style.display = noTabs ? "none" : "";
   }
 
   _setTab(tab, init) {
     if (tab === "opt" && this._config.show_optimization === false) tab = "flow";
     if (tab === "rec" && this._config.show_recap === false) tab = "flow";
+    if (tab === "siz" && this._config.show_sizing === false) tab = "flow";
     if ((tab === "pil" || tab === "plan") && (this._config.show_pilot === false || !this._hasPilot())) tab = "flow";
-    if (!["flow", "plan", "pil", "opt", "rec"].includes(tab)) tab = "flow";
+    if (!["flow", "plan", "pil", "opt", "rec", "siz"].includes(tab)) tab = "flow";
     this._tab = tab;
     if (!init) { try { localStorage.setItem(this._tabKey(), tab); } catch (e) { /* ignore */ } }
     const r = this.shadowRoot;
@@ -1165,11 +1307,13 @@ class FusionSolarCard extends HTMLElement {
     r.getElementById("v_rec").classList.toggle("on", tab === "rec");
     r.getElementById("v_pil").classList.toggle("on", tab === "pil");
     r.getElementById("v_plan").classList.toggle("on", tab === "plan");
+    r.getElementById("v_siz").classList.toggle("on", tab === "siz");
     if (!this._hass) return;
     if (tab === "pil") this._pilRender(true);
     if (tab === "plan") { this._planRender(true); this._planLog(true); }
     if (tab === "opt") this._optShow();
     if (tab === "rec") this._recShow();
+    if (tab === "siz") this._szShow();
   }
 
   _moreInfo(id) { this.dispatchEvent(new CustomEvent("hass-more-info", { detail: { entityId: id }, bubbles: true, composed: true })); }
@@ -1576,11 +1720,12 @@ const FsPaneMixin = {
     [opt, rec].forEach((el) => { el.addEventListener("pointermove", move); el.addEventListener("pointerleave", () => { tip.style.display = "none"; }); });
     if (window.ResizeObserver) {
       new ResizeObserver(() => {
-        const w = (this._tab === "opt" ? r.getElementById("o_body") : r.getElementById("r_body")).clientWidth;
+        const w = (this._tab === "opt" ? r.getElementById("o_body") : this._tab === "siz" ? r.getElementById("z_body") : r.getElementById("r_body")).clientWidth;
         if (!w || Math.abs(w - (this._paneW || 0)) < 40) return;
         this._paneW = w;
         if (this._tab === "opt" && this._optData) this._optRender();
         if (this._tab === "rec" && this._recData) this._recRender();
+        if (this._tab === "siz" && this._szData) this._szRender();
       }).observe(card);
     }
   },
@@ -2708,7 +2853,588 @@ const FsPilotMixin = {
   },
 };
 
-Object.assign(FusionSolarCard.prototype, FsPaneMixin, FsOptMixin, FsRecMixin, FsPilotMixin);
+/* ------------------------------------------------------------------------------------------ */
+/*  Onglet Installation : description, bilan et propositions d'évolution (PV, stockage)       */
+/* ------------------------------------------------------------------------------------------ */
+const FS_DEG = Math.PI / 180;
+/* position du soleil (NOAA simplifié) : cos(zénith) et azimut depuis le nord */
+function fsSolPos(t, lat, lon) {
+  const d = new Date(t);
+  const doy = Math.floor((t - Date.UTC(d.getUTCFullYear(), 0, 1)) / 86400000) + 1;
+  const h = d.getUTCHours() + d.getUTCMinutes() / 60;
+  const g = (2 * Math.PI / 365) * (doy - 1 + (h - 12) / 24);
+  const eq = 229.18 * (0.000075 + 0.001868 * Math.cos(g) - 0.032077 * Math.sin(g) - 0.014615 * Math.cos(2 * g) - 0.040849 * Math.sin(2 * g));
+  const dec = 0.006918 - 0.399912 * Math.cos(g) + 0.070257 * Math.sin(g) - 0.006758 * Math.cos(2 * g) + 0.000907 * Math.sin(2 * g) - 0.002697 * Math.cos(3 * g) + 0.00148 * Math.sin(3 * g);
+  const ha = ((h * 60 + eq + 4 * lon) / 4 - 180) * FS_DEG, phi = lat * FS_DEG;
+  const cosZ = Math.sin(phi) * Math.sin(dec) + Math.cos(phi) * Math.cos(dec) * Math.cos(ha);
+  const az = Math.atan2(Math.sin(ha), Math.cos(ha) * Math.sin(phi) - Math.tan(dec) * Math.cos(phi)) + Math.PI;
+  return { cosZ, az };
+}
+/* rayonnement par ciel clair (Haurwitz) */
+const fsGhiClear = (cz) => (cz > 0.01 ? 1098 * cz * Math.exp(-0.057 / cz) : 0);
+/* composantes horaires d'un plan (W/m² moyens sur l'heure) : POA(fd) = (1 - fd)·B + fd·D + A */
+function fsPlaneComp(t, lat, lon, tilt, paz) {
+  const b = tilt * FS_DEG, pa = paz * FS_DEG;
+  let B = 0, D = 0, A = 0;
+  for (let k = 0; k < 4; k++) {
+    const sp = fsSolPos(t + (k * 15 + 7.5) * 60000, lat, lon);
+    if (sp.cosZ <= 0.01) continue;
+    const ghi = fsGhiClear(sp.cosZ), sinZ = Math.sqrt(1 - sp.cosZ * sp.cosZ);
+    const cth = sp.cosZ * Math.cos(b) + sinZ * Math.sin(b) * Math.cos(sp.az - pa);
+    B += (ghi * Math.max(cth, 0)) / Math.max(sp.cosZ, 0.087);
+    D += (ghi * (1 + Math.cos(b))) / 2;
+    A += (0.2 * ghi * (1 - Math.cos(b))) / 2;
+  }
+  return [B / 4, D / 4, A / 4];
+}
+const FS_ORIENT = [[90, "E"], [135, "SE"], [180, "S"], [225, "SW"], [270, "W"], [45, "NE"], [315, "NW"]];
+function fsAzOf(name) {
+  const s = String(name || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z]/g, "");
+  const map = { sudest: 135, southeast: 135, se: 135, sudouest: 225, southwest: 225, so: 225, sw: 225, sud: 180, south: 180, s: 180, est: 90, east: 90, e: 90, ouest: 270, west: 270, o: 270, w: 270, nordest: 45, northeast: 45, nordouest: 315, northwest: 315 };
+  return map[s] ?? null;
+}
+
+const FsSizeMixin = {
+  _szInit() {
+    const v = this.shadowRoot.getElementById("v_siz");
+    v.addEventListener("click", (ev) => {
+      if (ev.target.closest("[data-zrefresh]")) { this._szLoad(); return; }
+      if (ev.target.closest("[data-zedit]")) { this._szEdit = !this._szEdit; this._szRender(); return; }
+      const sz = ev.target.closest("[data-zsize]");
+      if (sz) { this._szSize = Number(sz.dataset.zsize); this._szRender(); return; }
+      if (ev.target.closest("[data-zreset]")) { try { localStorage.removeItem("fusionsolar-card-install"); } catch (e) { /* ignore */ } this._szUser = {}; this._szRecalc(); return; }
+      const cp = ev.target.closest("[data-zcopy]");
+      if (cp) { const txt = this._szYaml(); try { navigator.clipboard.writeText(txt); cp.textContent = this._t("sz_copied"); } catch (e) { /* ignore */ } }
+    });
+    v.addEventListener("change", (ev) => {
+      const el = ev.target, k = el.dataset && el.dataset.z;
+      if (!k) return;
+      let val = el.type === "checkbox" ? el.checked : el.tagName === "SELECT" || el.type === "number" ? (el.value === "" ? null : Number(el.value)) : el.value;
+      if (typeof val === "number" && !isFinite(val)) val = null;
+      const u = Object.assign({}, this._szUser || {});
+      if (val === null || val === "") delete u[k]; else u[k] = val;
+      this._szUser = u;
+      try { localStorage.setItem("fusionsolar-card-install", JSON.stringify(u)); } catch (e) { /* ignore */ }
+      this._szRecalc();
+    });
+    v.addEventListener("pointermove", (ev) => this._szTip(ev));
+    v.addEventListener("pointerleave", () => { const tip = this.shadowRoot.getElementById("vtip"); if (tip) tip.style.display = "none"; });
+  },
+
+  _szTip(ev) {
+    const r = this.shadowRoot, tip = r.getElementById("vtip"), card = r.querySelector("ha-card");
+    const el = ev.target.closest && ev.target.closest("[data-tip]");
+    if (!el) { tip.style.display = "none"; return; }
+    tip.textContent = el.getAttribute("data-tip");
+    tip.style.display = "block";
+    const box = card.getBoundingClientRect();
+    let x = ev.clientX - box.left + 14, y = ev.clientY - box.top + 14;
+    if (x + tip.offsetWidth > box.width - 4) x = ev.clientX - box.left - tip.offsetWidth - 12;
+    if (y + tip.offsetHeight > box.height - 4) y = ev.clientY - box.top - tip.offsetHeight - 12;
+    tip.style.left = `${Math.max(4, x)}px`; tip.style.top = `${Math.max(4, y)}px`;
+  },
+
+  /* modèle de l'onduleur et de la batterie lus dans le registre des appareils */
+  _szDevModel(key) {
+    const id = this._eid(key), h = this._hass;
+    if (!id || !h || !h.entities || !h.devices) return null;
+    const e = h.entities[id], d = e && e.device_id && h.devices[e.device_id];
+    return d ? d.model || null : null;
+  },
+
+  /* réglages : défauts déduits de HA < option `installation:` de la carte < saisie dans l'onglet */
+  _szCfg() {
+    const c = this._config, I = c.installation || {}, U = this._szUser || {};
+    const pick = (k, def) => (U[k] != null ? U[k] : I[k] != null ? I[k] : def);
+    const invModel = this._szDevModel("inverter_power"), batModel = this._szDevModel("battery_soc");
+    const invKw = invModel && /(\d+(?:\.\d+)?)\s*K(?:TL|W)/i.test(invModel) ? parseFloat(invModel.match(/(\d+(?:\.\d+)?)\s*K(?:TL|W)/i)[1]) : 6;
+    const capH = this._n("capacity");
+    const n1 = c.pv1_name || "Sud", n2 = c.pv2_name || "Sud-Est";
+    const S = {
+      pv1_name: pick("pv1_name", n1), pv1_kwp: pick("pv1_kwp", null), pv1_az: pick("pv1_az", fsAzOf(n1) ?? 180), pv1_tilt: pick("pv1_tilt", 30),
+      pv2_name: pick("pv2_name", n2), pv2_kwp: pick("pv2_kwp", null), pv2_az: pick("pv2_az", fsAzOf(n2) ?? 135), pv2_tilt: pick("pv2_tilt", 30),
+      inv_kw: pick("inv_kw", invKw), mppt_total: pick("mppt_total", 2), mppt_used: pick("mppt_used", 2),
+      bat_kwh: pick("bat_kwh", capH ?? (Number(c.battery_capacity) || 10)), bat_kw: pick("bat_kw", 5),
+      mod_kwh: pick("mod_kwh", 5), mod_max: pick("mod_max", 3), stack_max: pick("stack_max", 2),
+      price_hp: pick("price_hp", 0.1752), price_hc: pick("price_hc", 0.132), price_exp: pick("price_exp", c.export_price != null ? Number(c.export_price) : 0.04),
+      cost_pv: pick("cost_pv", 1500), cost_bat: pick("cost_bat", 450), cost_stack: pick("cost_stack", 1200), years: pick("years", 15), years_pv: pick("years_pv", 25),
+      step: pick("step", 1.5), tilt_new: pick("tilt_new", null), bat_ev: pick("bat_ev", false),
+      invModel, batModel,
+    };
+    if (S.tilt_new == null) S.tilt_new = Math.round(((S.pv1_tilt || 30) + (S.pv2_tilt || 30)) / 2);
+    return S;
+  },
+
+  _szShow() {
+    if (this._szUser == null) { try { this._szUser = JSON.parse(localStorage.getItem("fusionsolar-card-install") || "{}") || {}; } catch (e) { this._szUser = {}; } }
+    if (this._szSize == null) this._szSize = 2;
+    const stale = !this._szData || Date.now() - this._szData.at > 6 * 3600000;
+    if (stale && !this._szLoading) this._szLoad(); else this._szRender();
+  },
+
+  async _szLoad() {
+    if (this._szLoading) return;
+    this._szLoading = true; this._szRender();
+    try {
+      const now = Date.now(), start = fsDay0(now) - 365 * 86400000;
+      const chunks = [];
+      for (let a = start; a < now; a += 31 * 86400000) chunks.push([a, Math.min(a + 31 * 86400000, now)]);
+      const parts = await Promise.all(chunks.map(([a, b]) => this._fetchStats(FS_E, a, b, "hour")));
+      const S = {};
+      for (const k of Object.keys(FS_E)) S[k] = new Map(parts.flatMap((p) => [...(p[k] || new Map())]));
+      const rows = this._rows(S).filter((r) => r.t < fsDay0(now));
+      let soc = null;
+      const sid = this._eid("battery_soc");
+      if (sid) {
+        try {
+          const res = await this._hass.callWS({ type: "recorder/statistics_during_period", start_time: new Date(start).toISOString(), end_time: new Date(now).toISOString(), statistic_ids: [sid], period: "day", types: ["min", "max"] });
+          soc = (res[sid] || []).map((r) => ({ t: fsTs(r.start), min: r.min, max: r.max })).filter((r) => r.min != null && r.max != null);
+        } catch (e) { soc = null; }
+      }
+      this._szData = { at: Date.now(), rows, soc, missing: parts.length ? parts[0]._missing || [] : [] };
+      this._szRecalc(true);
+    } catch (e) {
+      this._szData = { at: Date.now(), error: String((e && e.message) || e) };
+    }
+    this._szLoading = false;
+    this._szRender();
+  },
+
+  _szRecalc(silent) {
+    if (this._szData && this._szData.rows) {
+      try { this._szData.A = this._szAnalyze(this._szData); } catch (e) { this._szData.A = { error: String((e && e.message) || e) }; }
+    }
+    if (!silent) this._szRender();
+  },
+
+  /* ---------- analyse ---------- */
+  _szAnalyze(D) {
+    const C = this._szCfg(), rows = D.rows.filter((r) => r.pv > 0 || r.load > 0);
+    const A = { C };
+    if (rows.length < 24 * 20) { A.short = true; A.n = rows.length; return A; }
+    const lat = (this._hass.config && this._hass.config.latitude) ?? 46.5, lon = (this._hass.config && this._hass.config.longitude) ?? 2.5;
+    A.lat = lat; A.lon = lon;
+    const n = rows.length;
+    const H = { n, t: new Float64Array(n), pv: new Float64Array(n), load: new Float64Array(n), ev: new Float64Array(n), hp: new Float64Array(n), hc: new Uint8Array(n), mon: new Array(n), day: new Float64Array(n), di: new Int32Array(n), am: new Uint8Array(n) };
+    rows.forEach((r, i) => {
+      H.t[i] = r.t; H.pv[i] = r.pv; H.load[i] = r.load; H.ev[i] = Math.min(r.ev, r.load); H.hp[i] = r.hp;
+      H.hc[i] = this._off.length && fsInOff(this._off, new Date(r.t + 1800000)) ? 1 : 0;
+      H.mon[i] = new Date(r.t).getMonth(); H.day[i] = fsDay0(r.t); H.am[i] = new Date(r.t).getHours() < 12 ? 1 : 0;
+    });
+    const days = new Set(H.day).size;
+    A.days = days; A.t0 = H.t[0]; A.t1 = H.t[n - 1];
+    A.ann = days >= 360 ? 365 / days : 365 / days;
+    A.partial = days < 330;
+    // mesures
+    const T = fsAdd(rows);
+    A.T = T;
+    T.self = T.pv > 0.1 ? (T.pv - T.exp) / T.pv : null;
+    T.auto = T.load > 0.1 ? fsAuto(T) : null;
+    A.rt = T.chg > 1 ? fsClamp(T.dis / T.chg, 0.8, 0.97) : 0.9;
+    A.endSoc = this._n("battery_end_soc") ?? 10; A.maxSoc = this._n("battery_max_soc") ?? 100;
+    // groupes par jour
+    const dayIdx = [];
+    for (let i = 0; i < n; i++) { if (!i || H.day[i] !== H.day[i - 1]) dayIdx.push([i, i + 1]); else dayIdx[dayIdx.length - 1][1] = i + 1; H.di[i] = dayIdx.length - 1; }
+    H.nd = dayIdx.length;
+    // composantes solaires par orientation (cache)
+    const comp = {};
+    const getComp = (tilt, az) => {
+      const k = `${tilt}|${az}`;
+      if (!comp[k]) { const a = new Float32Array(n * 3); for (let i = 0; i < n; i++) { const c = fsPlaneComp(H.t[i], lat, lon, tilt, az); a[i * 3] = c[0]; a[i * 3 + 1] = c[1]; a[i * 3 + 2] = c[2]; } comp[k] = a; }
+      return comp[k];
+    };
+    const poa = (a, i, fd) => (1 - fd) * a[i * 3] + fd * a[i * 3 + 1] + a[i * 3 + 2];
+    const c1 = getComp(C.pv1_tilt, C.pv1_az), c2 = getComp(C.pv2_tilt, C.pv2_az);
+    // puissance crête estimée : jours les plus clairs, PR 0,8
+    const f1 = C.pv1_kwp && C.pv2_kwp ? C.pv1_kwp / (C.pv1_kwp + C.pv2_kwp) : 0.5;
+    const ratios = [];
+    for (const [a, b] of dayIdx) {
+      let e = 0, cl = 0;
+      for (let i = a; i < b; i++) { e += H.pv[i]; cl += (f1 * poa(c1, i, 0.2) + (1 - f1) * poa(c2, i, 0.2)) / 1000; }
+      if (cl > 0.5 && e > 0) ratios.push(e / cl);
+    }
+    ratios.sort((x, y) => y - x);
+    const top = ratios.slice(0, Math.max(3, Math.round(ratios.length * 0.04)));
+    A.kwpEst = top.length ? Math.round((fsMean(top) / 0.8) * 10) / 10 : null;
+    const k1 = C.pv1_kwp ?? (A.kwpEst ? Math.round(A.kwpEst * f1 * 10) / 10 : 3), k2 = C.pv2_kwp ?? (A.kwpEst ? Math.round(A.kwpEst * (1 - f1) * 10) / 10 : 3);
+    A.k1 = k1; A.k2 = k2; A.kwp = k1 + k2; A.kwpUser = C.pv1_kwp != null && C.pv2_kwp != null;
+    // nébulosité du jour -> part diffuse, puis répartition horaire d'un plan ajouté
+    const fdD = new Float64Array(dayIdx.length), sumC = new Float64Array(dayIdx.length), eD = new Float64Array(dayIdx.length);
+    dayIdx.forEach(([a, b], j) => {
+      let e = 0, cl = 0;
+      for (let i = a; i < b; i++) { e += H.pv[i]; cl += (k1 * poa(c1, i, 0.2) + k2 * poa(c2, i, 0.2)) / 1000 * 0.8; }
+      const K = cl > 0 ? e / cl : 0;
+      const fd = K >= 0.75 ? 0.2 : K <= 0.2 ? 1 : 1 - ((K - 0.2) / 0.55) * 0.8;
+      let s = 0;
+      for (let i = a; i < b; i++) s += k1 * poa(c1, i, fd) + k2 * poa(c2, i, fd);
+      fdD[j] = fd; sumC[j] = s; eD[j] = e;
+    });
+    const unit = {};
+    A.addUnit = (tilt, az) => {
+      const k = `${tilt}|${az}`;
+      if (unit[k]) return unit[k];
+      const c = getComp(tilt, az), out = new Float64Array(n);
+      dayIdx.forEach(([a, b], j) => { if (sumC[j] <= 0) return; for (let i = a; i < b; i++) out[i] = (eD[j] * poa(c, i, fdD[j])) / sumC[j]; });
+      unit[k] = out;
+      return out;
+    };
+    // écrêtage onduleur (heures proches de la puissance AC)
+    let clipH = 0;
+    for (let i = 0; i < n; i++) if (H.pv[i] >= C.inv_kw * 0.95) clipH++;
+    A.clipH = clipH;
+    // état de charge réel : jours batterie pleine / vide
+    if (D.soc && D.soc.length > 10) {
+      A.socDays = D.soc.length;
+      A.fullDays = D.soc.filter((r) => r.max >= A.maxSoc - 2).length;
+      A.emptyDays = D.soc.filter((r) => r.min <= A.endSoc + 2).length;
+    }
+    A.H = H;
+    // simulation de référence (installation actuelle, autoconsommation pure)
+    const base = this._szSim(A, { cap: C.bat_kwh, diag: true });
+    A.base = base;
+    // stockage
+    const mod = Math.max(C.mod_kwh, 1), curMods = Math.max(1, Math.round(C.bat_kwh / mod));
+    const stacks = (m) => Math.ceil(m / Math.max(C.mod_max, 1));
+    A.maxCap = mod * C.mod_max * C.stack_max;
+    const batInv = (cap) => { const m = Math.round(cap / mod); return Math.max(0, cap - C.bat_kwh) * C.cost_bat + Math.max(0, stacks(m) - stacks(curMods)) * C.cost_stack; };
+    A.bat = [];
+    for (let m = curMods; m <= C.mod_max * C.stack_max; m++) {
+      const cap = m === curMods ? C.bat_kwh : C.bat_kwh + (m - curMods) * mod;
+      const r = m === curMods ? base : this._szSim(A, { cap });
+      A.bat.push(this._szEco(A, r, { bat: batInv(cap) }, { cap, mods: m, stack: stacks(m) > stacks(curMods) }));
+    }
+    // panneaux
+    const tn = C.tilt_new;
+    A.orients = [
+      { id: "ew", parts: [[tn, 90, 0.5], [tn, 270, 0.5]] },
+      { id: "e", parts: [[tn, 90, 1]] },
+      { id: "w", parts: [[tn, 270, 1]] },
+      { id: "s", parts: [[tn, 180, 1]] },
+      { id: "s60", parts: [[60, 180, 1]] },
+    ];
+    A.sizes = [1, 2, 3].map((k) => Math.round(C.step * k * 10) / 10);
+    const addOf = (o, kwp) => { const out = new Float64Array(n); for (const [tl, az, f] of o.parts) { const u = A.addUnit(tl, az); for (let i = 0; i < n; i++) out[i] += u[i] * kwp * f; } return out; };
+    A.addOf = addOf;
+    A.pv = {};
+    for (const o of A.orients) {
+      A.pv[o.id] = A.sizes.map((kwp) => {
+        const add = addOf(o, kwp);
+        const r = this._szSim(A, { cap: C.bat_kwh, add });
+        return this._szEco(A, r, { pv: kwp * C.cost_pv }, { kwp, o: o.id, addE: fsSum(add) });
+      });
+    }
+    // meilleures options (valeur nette sur l'horizon)
+    const best = (list) => list.filter(Boolean).reduce((m, x) => (!m || x.value > m.value ? x : m), null);
+    A.bestBat = best(A.bat.slice(1));
+    A.bestPv = best(Object.values(A.pv).flat());
+    // référence panneaux : la meilleure option, ou à défaut celle qui se rembourse le plus vite
+    A.refPv = A.bestPv && A.bestPv.value > 0 ? A.bestPv : Object.values(A.pv).flat().reduce((m, x) => (!m || x.payback < m.payback ? x : m), null);
+    // combinaisons : orientation de référence × capacités
+    const bo = A.orients.find((o) => o.id === A.refPv.o) || A.orients[0];
+    A.comboO = bo.id;
+    A.combo = [0, ...A.sizes].map((kwp) => A.bat.map((b) => {
+      if (!kwp) return b;
+      const add = addOf(bo, kwp);
+      const r = this._szSim(A, { cap: b.cap, add });
+      return this._szEco(A, r, { pv: kwp * C.cost_pv, bat: b.invBat || 0 }, { kwp, o: bo.id, cap: b.cap, addE: fsSum(add) });
+    }));
+    A.bestCombo = best(A.combo.flat().filter((x) => x.kwp && x.cap > C.bat_kwh));
+    A.bestAll = best(A.combo.flat().filter((x) => x.invest > 0));
+    return A;
+  },
+
+  /* simulation horaire, logique « autoconsommation max. » (pas de charge réseau) */
+  _szSim(A, o) {
+    const H = A.H, C = A.C, n = H.n;
+    const cap = o.cap, smin = (cap * A.endSoc) / 100, smax = (cap * A.maxSoc) / 100, kw = C.bat_kw, eta = Math.sqrt(A.rt);
+    const pe = C.price_exp, ph = C.price_hc, pp = C.price_hp;
+    let s = (smin + smax) / 2;
+    const R = { pv: 0, load: 0, imp: 0, exp: 0, impHc: 0, cost: 0, dis: 0, expFull: 0, impEmpty: 0, months: new Map() };
+    const ef = o.diag ? new Float64Array(H.nd) : null, ieAm = o.diag ? new Float64Array(H.nd) : null, iePm = o.diag ? new Float64Array(H.nd) : null;
+    for (let i = 0; i < n; i++) {
+      const pv = H.pv[i] + (o.add ? o.add[i] : 0), L = H.load[i], ev = H.ev[i], house = L - ev;
+      const pvH = Math.min(pv, house); let rest = pv - pvH;
+      const pvE = Math.min(rest, ev); rest -= pvE;
+      const hDef = house - pvH, eDef = ev - pvE;
+      let ex = 0, im = hDef + eDef;
+      if (rest > 0) {
+        const ch = Math.min(rest, kw, Math.max(0, smax - s) / eta);
+        s += ch * eta; ex = rest - ch;
+        if (ex > 0.01 && smax - s < 0.05) { R.expFull += ex; if (ef) ef[H.di[i]] += ex; }
+      }
+      const need = hDef + (C.bat_ev ? eDef : 0);
+      if (need > 0) {
+        const d = Math.min(need, kw, Math.max(0, s - smin) * eta);
+        s -= d / eta; im -= d; R.dis += d;
+        if (need - d > 0.01 && s - smin < 0.05) { R.impEmpty += need - d; if (ef) (H.am[i] ? ieAm : iePm)[H.di[i]] += need - d; }
+      }
+      R.pv += pv; R.load += L; R.imp += im; R.exp += ex;
+      if (H.hc[i]) R.impHc += im;
+      R.cost += im * (H.hc[i] ? ph : pp) - ex * pe;
+      let m = R.months.get(H.mon[i]);
+      if (!m) { m = { pv: 0, load: 0, imp: 0, exp: 0 }; R.months.set(H.mon[i], m); }
+      m.pv += pv; m.load += L; m.imp += im; m.exp += ex;
+    }
+    // potentiel d'une batterie plus grande : surplus perdu un jour et racheté le soir même ou la nuit suivante
+    if (ef) { let p = 0; for (let d = 0; d < H.nd; d++) p += Math.min(ef[d], iePm[d] + (d + 1 < H.nd ? ieAm[d + 1] : 0)); R.potential = p; }
+    R.auto = R.load > 0 ? 1 - R.imp / R.load : null;
+    R.self = R.pv > 0 ? (R.pv - R.exp) / R.pv : null;
+    R.cycles = R.dis / Math.max(smax - smin, 0.1);
+    return R;
+  },
+
+  /* économie d'un scénario par rapport à la simulation de référence, ramenée à l'année */
+  /* valeur nette = gain annuel − investissement à rembourser sur 60 % de la durée de vie (marge pour l'usure, l'entretien et l'argent immobilisé) */
+  _szEco(A, r, inv, extra) {
+    const C = A.C, b = A.base || r, k = A.ann;
+    const gain = (b.cost - r.cost) * k, invPv = inv.pv || 0, invBat = inv.bat || 0, invest = invPv + invBat;
+    const o = Object.assign({ r, invest, invPv, invBat, gain, impY: r.imp * k, dImp: (b.imp - r.imp) * k, dExp: (r.exp - b.exp) * k, auto: r.auto, dAuto: (r.auto - b.auto) * 100 }, extra);
+    o.payback = gain > 1 ? invest / gain : Infinity;
+    o.annual = invPv / Math.max(C.years_pv * 0.6, 1) + invBat / Math.max(C.years * 0.6, 1);
+    o.value = invest > 0 ? gain - o.annual : 0;
+    if (extra.addE != null) { o.addY = extra.addE * k; o.selfAdd = extra.addE > 0 ? fsClamp((b.exp - r.exp + extra.addE) / extra.addE, 0, 1) : 0; }
+    return o;
+  },
+
+  _szYaml() {
+    const C = this._szCfg(), A = this._szData && this._szData.A;
+    const k1 = C.pv1_kwp ?? (A && A.k1), k2 = C.pv2_kwp ?? (A && A.k2);
+    const L = ["installation:",
+      `  pv1_name: ${C.pv1_name}`, `  pv1_kwp: ${k1 ?? ""}`, `  pv1_az: ${C.pv1_az}`, `  pv1_tilt: ${C.pv1_tilt}`,
+      `  pv2_name: ${C.pv2_name}`, `  pv2_kwp: ${k2 ?? ""}`, `  pv2_az: ${C.pv2_az}`, `  pv2_tilt: ${C.pv2_tilt}`,
+      `  inv_kw: ${C.inv_kw}`, `  mppt_total: ${C.mppt_total}`, `  mppt_used: ${C.mppt_used}`,
+      `  bat_kwh: ${C.bat_kwh}`, `  bat_kw: ${C.bat_kw}`, `  mod_kwh: ${C.mod_kwh}`, `  mod_max: ${C.mod_max}`, `  stack_max: ${C.stack_max}`,
+      `  price_hp: ${C.price_hp}`, `  price_hc: ${C.price_hc}`, `  price_exp: ${C.price_exp}`,
+      `  cost_pv: ${C.cost_pv}`, `  cost_bat: ${C.cost_bat}`, `  cost_stack: ${C.cost_stack}`, `  years: ${C.years}`, `  years_pv: ${C.years_pv}`, `  step: ${C.step}`, `  tilt_new: ${C.tilt_new}`, `  bat_ev: ${C.bat_ev}`];
+    return L.join("\n");
+  },
+
+  /* ---------- rendu ---------- */
+  _szRender() {
+    const r = this.shadowRoot, el = r && r.getElementById("z_body");
+    if (!el) return;
+    const t = (k, v) => this._t(k, v), D = this._szData, e = fsEsc;
+    const A = D && D.A;
+    this._bar("z_bar", `<span class="omuted">${this._szLoading ? t("loading") : A && A.days ? e(t("sz_period", { n: A.days, a: new Date(A.t0).toLocaleDateString(this._lang(), { day: "numeric", month: "short", year: "numeric" }), b: new Date(A.t1).toLocaleDateString(this._lang(), { day: "numeric", month: "short", year: "numeric" }) })) : ""}</span>
+      <div style="display:flex;gap:8px;align-items:center"><button class="obtn" data-zedit>${t(this._szEdit ? "sz_edit_close" : "sz_edit")}</button><button class="obtn" data-zrefresh>${t("refresh")}</button></div>`);
+    if (!D) { el.innerHTML = this._szLoading ? `<div class="onote">${t("loading")}</div>` : ""; return; }
+    if (D.error) { el.innerHTML = `<div class="onote">${e(D.error)}</div>`; return; }
+    if (!A) { el.innerHTML = `<div class="onote">${t("loading")}</div>`; return; }
+    if (A.error) { el.innerHTML = `<div class="onote">${e(A.error)}</div>`; return; }
+    const head = this._szInstallHtml(A);
+    if (A.short) { el.innerHTML = head + `<div class="onote">${t("sz_short")}</div>`; return; }
+    const W = this._widths(el);
+    el.innerHTML = head + this._szSummaryHtml(A) + this._szPropHtml(A) + `
+      <div class="ogrid">
+        <div class="opanel wide">${this._szBatHtml(A, W.wide)}</div>
+        <div class="opanel wide">${this._szPvHtml(A)}</div>
+        <div class="opanel">${this._szProfHtml(A, W.half, "high")}</div>
+        <div class="opanel">${this._szProfHtml(A, W.half, "low")}</div>
+        <div class="opanel wide">${this._szComboHtml(A)}</div>
+        <div class="opanel wide">${this._szMonthHtml(A, W.wide)}</div>
+      </div>
+      <div class="phow">${t("sz_how", { lat: this._f(A.lat, 2), lon: this._f(A.lon, 2), np: this._f(A.C.years_pv * 0.6, 0), nb: this._f(A.C.years * 0.6, 0) })}</div>`;
+  },
+
+  _szOrName(az) { const o = FS_ORIENT.find(([a]) => a === Number(az)); return o ? this._t("sz_or")[o[1]] : `${az}°`; },
+
+  _szInstallHtml(A) {
+    const t = (k, v) => this._t(k, v), f = (v, d = 1) => this._f(v, d), e = fsEsc, C = A.C || this._szCfg();
+    const k1 = C.pv1_kwp ?? A.k1, k2 = C.pv2_kwp ?? A.k2;
+    const est = !A.kwpUser && A.kwpEst;
+    const pvTxt = (i, k) => `${e(C[`pv${i}_name`])} · ${k != null ? f(k, 1) : "?"} kWc · ${e(this._szOrName(C[`pv${i}_az`]))} ${f(C[`pv${i}_tilt`], 0)}°`;
+    const sum = `<div class="zinst">
+      <div class="zi"><span class="tl">PV 1</span><b>${pvTxt(1, k1)}</b></div>
+      <div class="zi"><span class="tl">PV 2</span><b>${pvTxt(2, k2)}</b></div>
+      <div class="zi"><span class="tl">${t("sz_inv")}</span><b>${C.invModel ? e(C.invModel) + " · " : ""}${f(C.inv_kw, 1)} kW · MPPT ${C.mppt_used}/${C.mppt_total}</b></div>
+      <div class="zi"><span class="tl">${t("sz_bat")}</span><b>${C.batModel ? e(C.batModel) + " · " : ""}${f(C.bat_kwh, 0)} kWh · ${f(C.bat_kw, 1)} kW</b></div>
+    </div>${est ? `<div class="pnote">${e(t("sz_est", { k: f(A.kwpEst, 1) }))}</div>` : ""}`;
+    if (!this._szEdit) return `<div class="opanel zpan"><div class="ot">${t("sz_install")}</div>${sum}</div>`;
+    const num = (k, label, unit, step = "any", ph = "") => `<div class="prow"><div class="pl">${label}</div><div class="pnum"><input class="pin" type="number" step="${step}" data-z="${k}" value="${C[k] ?? ""}" placeholder="${e(ph)}"><span class="punit">${unit}</span></div></div>`;
+    const txt = (k, label) => `<div class="prow"><div class="pl">${label}</div><input class="pin" type="text" data-z="${k}" value="${e(C[k] ?? "")}" style="width:110px"></div>`;
+    const ori = (k, label) => `<div class="prow"><div class="pl">${label}</div><select class="pin" data-z="${k}">${FS_ORIENT.map(([a, id]) => `<option value="${a}"${Number(C[k]) === a ? " selected" : ""}>${e(t("sz_or")[id])} (${a}°)</option>`).join("")}</select></div>`;
+    const chk = (k, label) => `<div class="prow psw"><div class="pl">${label}</div><input type="checkbox" data-z="${k}"${C[k] ? " checked" : ""}></div>`;
+    const pvF = (i) => `${txt(`pv${i}_name`, t("sz_name"))}${num(`pv${i}_kwp`, t("sz_kwp"), "kWc", "0.1", i === 1 ? f(A.k1, 1) : f(A.k2, 1))}${ori(`pv${i}_az`, t("sz_az"))}${num(`pv${i}_tilt`, t("sz_tilt"), "°", "1")}`;
+    return `<div class="opanel zpan"><div class="ot">${t("sz_install")}</div>${sum}
+      <div class="pgrid" style="margin-top:12px">
+        <div class="pset"><h4>PV 1</h4>${pvF(1)}</div>
+        <div class="pset"><h4>PV 2</h4>${pvF(2)}</div>
+        <div class="pset"><h4>${t("sz_inv")} · ${t("sz_bat")}</h4>${num("inv_kw", t("sz_invkw"), "kW", "0.1")}${num("mppt_total", t("sz_mppt_t"), "", "1")}${num("mppt_used", t("sz_mppt_u"), "", "1")}${num("bat_kwh", t("sz_batkwh"), "kWh", "0.1")}${num("bat_kw", t("sz_batkw"), "kW", "0.1")}${num("mod_kwh", t("sz_mod"), "kWh", "0.1")}${num("mod_max", t("sz_modmax"), "", "1")}${num("stack_max", t("sz_stackmax"), "", "1")}${chk("bat_ev", t("sz_batev"))}</div>
+        <div class="pset"><h4>${t("sz_eco")}</h4>${num("price_hp", t("sz_php"), "€/kWh", "0.0001")}${num("price_hc", t("sz_phc"), "€/kWh", "0.0001")}${num("price_exp", t("sz_pexp"), "€/kWh", "0.0001")}${num("cost_pv", t("sz_cpv"), "€/kWc", "10")}${num("cost_bat", t("sz_cbat"), "€/kWh", "10")}${num("cost_stack", t("sz_cstack"), "€", "10")}${num("years_pv", t("sz_years_pv"), t("sz_yr"), "1")}${num("years", t("sz_years"), t("sz_yr"), "1")}${num("step", t("sz_step"), "kWc", "0.1")}${num("tilt_new", t("sz_tiltnew"), "°", "1")}</div>
+      </div>
+      <div class="pnote" style="margin-top:8px">${e(t("sz_save_note"))}</div>
+      <div class="ra"><button class="abtn sec" data-zcopy>${t("sz_copy")}</button><button class="abtn sec" data-zreset>${t("sz_reset")}</button></div>
+    </div>`;
+  },
+
+  _szSummaryHtml(A) {
+    const t = (k, v) => this._t(k, v), f = (v, d = 0) => this._f(v, d), k = A.ann, T = A.T, C = A.C;
+    const kp = (l, v, s) => `<div class="kpi"><div class="tl">${l}</div><div class="tv">${v}</div><div class="ts">${s || ""}</div></div>`;
+    const spec = A.kwp > 0 ? (T.pv * k) / A.kwp : null;
+    const bill = (A.base.cost) * k;
+    return `<div class="kpis zk" style="margin-top:12px">
+      ${kp(t("sz_k_prod"), `${f(T.pv * k)}<small>kWh/${t("sz_yr")}</small>`, spec ? t("sz_k_spec", { s: f(spec) }) : "")}
+      ${kp(t("sz_k_cons"), `${f(T.load * k)}<small>kWh/${t("sz_yr")}</small>`, T.hp > 1 ? t("sz_k_hp", { p: f((T.hp / T.load) * 100) }) : "")}
+      ${kp(t("kp_self"), T.self != null ? `${f(T.self * 100)}<small>%</small>` : "—", t("sz_k_exp", { e: f(T.exp * k) }))}
+      ${kp(t("kp_auto"), T.auto != null ? `${f(T.auto * 100)}<small>%</small>` : "—", t("sz_k_sim", { p: f(A.base.auto * 100) }))}
+      ${kp(t("sz_k_bill"), `${f(bill)}<small>€/${t("sz_yr")}</small>`, t("sz_k_bill_s"))}
+      ${kp(t("kp_cyc"), `${f(A.base.cycles * k)}<small>/${t("sz_yr")}</small>`, A.fullDays != null ? t("sz_k_full", { a: A.fullDays, b: A.emptyDays, n: A.socDays }) : "")}
+    </div>`;
+  },
+
+  _szPropHtml(A) {
+    const t = (k, v) => this._t(k, v), f = (v, d = 0) => this._f(v, d), e = fsEsc, C = A.C, k = A.ann;
+    const yrs = (p) => (isFinite(p) && p < 40 ? t("sz_yrs", { n: f(p, p < 10 ? 1 : 0) }) : t("sz_never"));
+    const cards = [];
+    if (A.partial) cards.push({ col: "#ffb547", head: t("sz_partial_h"), val: t("sz_partial_v", { n: A.days }), txt: t("sz_partial_t") });
+    // stockage
+    {
+      const b1 = A.bat[1], B = A.bestBat;
+      const bmax = A.bat[A.bat.length - 1], lim = bmax ? bmax.dImp : 0;
+      const diag = t("sz_bat_diag", { e: f(A.base.expFull * k), i: f(A.base.impEmpty * k) }) + (A.fullDays != null ? " " + t("sz_bat_days", { a: A.fullDays, b: A.emptyDays, n: A.socDays }) : "");
+      if (B && B.value > 0) cards.push({ col: FS_COL.bat, icon: "bat", head: t("sz_p_bat"), val: t("sz_p_bat_v", { c: f(B.cap), d: f(B.cap - C.bat_kwh) }),
+        txt: t("sz_p_bat_t", { a: f(B.dAuto, 1), i: f(B.dImp), g: f(B.gain), c: f(B.invest), p: yrs(B.payback) }) + (B.stack ? " " + t("sz_p_stack") : "") + " " + diag });
+      else if (b1) cards.push({ col: FS_COL.idle, icon: "bat", head: t("sz_p_bat"), val: t("sz_p_bat_keep", { c: f(C.bat_kwh) }),
+        txt: t("sz_p_bat_keep_t", { m: f(C.mod_kwh), x: f(b1.dImp), g: f(b1.gain), p: yrs(b1.payback), l: f(lim), c: f(bmax.cap) }) + " " + diag });
+      else cards.push({ col: FS_COL.idle, icon: "bat", head: t("sz_p_bat"), val: t("sz_p_bat_max", { c: f(C.bat_kwh) }), txt: diag });
+    }
+    // panneaux
+    {
+      const P = A.bestPv;
+      const mppt = C.mppt_used >= C.mppt_total ? t("sz_mppt_full") : t("sz_mppt_free");
+      if (P && P.value > 0) {
+        const ew = A.pv.ew[A.sizes.indexOf(P.kwp)], s = A.pv.s[A.sizes.indexOf(P.kwp)];
+        const cmp = P.o !== "ew" && ew ? t("sz_cmp", { o: t("sz_o")[P.o], a: f(P.gain), b: t("sz_o").ew, c: f(ew.gain) }) : P.o === "ew" && s ? t("sz_cmp", { o: t("sz_o").ew, a: f(P.gain), b: t("sz_o").s, c: f(s.gain) }) : "";
+        cards.push({ col: FS_COL.pv, icon: "exp", head: t("sz_p_pv"), val: t("sz_p_pv_v", { k: this._f(P.kwp, 1), o: t("sz_o")[P.o] }),
+          txt: `${t("sz_p_pv_t", { e: f(P.addY), s: f(P.selfAdd * 100), a: f(P.dAuto, 1), g: f(P.gain), c: f(P.invest), p: yrs(P.payback) })} ${cmp} ${t(`sz_why_${P.o}`)} ${mppt}` });
+      } else {
+        const R = A.refPv;
+        cards.push({ col: FS_COL.idle, icon: "exp", head: t("sz_p_pv"), val: t("sz_p_pv_no"), txt: `${t("sz_p_pv_no_t", { o: t("sz_o")[R.o], k: this._f(R.kwp, 1), s: f(R.selfAdd * 100), g: f(R.gain), c: f(R.invest), p: yrs(R.payback), x: this._f(C.price_exp, 2), n: f(C.years_pv * 0.6) })} ${mppt}` });
+      }
+    }
+    // combinaison
+    {
+      const X = A.bestCombo, m = Math.max(A.bestBat ? A.bestBat.value : 0, A.bestPv ? A.bestPv.value : 0);
+      if (X && X.value > 0 && X.value > m * 1.05) cards.push({ col: "#b28dff", icon: "mode", head: t("sz_p_combo"), val: t("sz_p_combo_v", { k: this._f(X.kwp, 1), o: t("sz_o")[X.o], c: f(X.cap) }),
+        txt: t("sz_p_combo_t", { a: f(X.auto * 100), d: f(X.dAuto, 1), g: f(X.gain), c: f(X.invest), p: yrs(X.payback), yp: C.years_pv, yb: C.years, v: f(X.value) }) });
+    }
+    // sans investir
+    {
+      const ex = A.T.exp * k;
+      if (ex > 100) cards.push({ col: FS_COL.hp, icon: "hp", head: t("sz_p_use"), val: t("sz_p_use_v", { e: f(ex) }), txt: t("sz_p_use_t", { g: this._f(C.price_hp - C.price_exp, 2), x: f(ex * 0.2 * (C.price_hp - C.price_exp)) }) });
+    }
+    return `<div class="recs" style="margin-top:12px">${cards.map((R) => `<div class="rec" style="--rc:${R.col}"><div class="ic">${FS_ICONS[R.icon] || FS_ICONS.mode}</div><div><div class="rh">${e(R.head)}</div><div class="rv">${e(R.val)}</div><div class="rt">${e(R.txt)}</div></div></div>`).join("")}</div>`;
+  },
+
+  _szBatHtml(A, w) {
+    const t = (k, v) => this._t(k, v), f = (v, d = 0) => this._f(v, d), e = fsEsc;
+    const yrs = (p) => (isFinite(p) && p < 40 ? f(p, p < 10 ? 1 : 0) : "> 40");
+    const best = A.bestBat && A.bestBat.value > 0 ? A.bestBat.cap : null;
+    const rows = A.bat.map((b, i) => `<tr class="${i === 0 ? "cur" : b.cap === best ? "best" : ""}"><td>${f(b.cap)} kWh${i === 0 ? ` <span class="ztag">${t("sz_now")}</span>` : b.stack ? ` <span class="ztag">${t("sz_2stack")}</span>` : ""}</td><td>${f(b.auto * 100)} %</td><td class="nc">${f(b.impY)} kWh</td><td>${i ? `+${f(b.gain)} €` : "—"}</td><td class="nc">${i ? `${f(b.invest)} €` : "—"}</td><td>${i ? yrs(b.payback) : "—"}</td></tr>`).join("");
+    const ymax = Math.max(...A.bat.map((b) => b.auto * 100)) * 1.1;
+    const ymin = Math.max(0, Math.min(...A.bat.map((b) => b.auto * 100)) - 10);
+    const chart = fsPlot({
+      w, h: 180, aria: t("sz_bat_title"), x: { cats: A.bat.map((b) => `${f(b.cap)} kWh`), maxLabels: 8 },
+      y: { min: ymin, max: Math.min(100, ymax), n: 4, fmt: (v) => `${Math.round(v)}%` },
+      layers: ({ sx, sy, bw }) => A.bat.map((b, i) => {
+        const wB = Math.min(54, bw * 0.6), tip = `${f(b.cap)} kWh\n${t("kp_auto")}: ${f(b.auto * 100, 1)} %\n${t("sz_c_imp")}: ${f(b.impY)} kWh${i ? `\n+${f(b.gain)} €/${t("sz_yr")}` : ""}`;
+        return fsRect(sx(i) - wB / 2, sy(b.auto * 100), sy(ymin), wB, i === 0 ? FS_SER.neutral : b.cap === best ? FS_SER.bat : "#3a6f55", tip, "top")
+          + `<text class="tk" x="${sx(i)}" y="${sy(b.auto * 100) - 6}" text-anchor="middle">${f(b.auto * 100)}%</text>`;
+      }).join(""),
+    });
+    return `<div class="ot">${t("sz_bat_title")}</div><div class="os">${e(t("sz_bat_sub", { m: f(A.C.mod_kwh), n: A.C.mod_max, s: A.C.stack_max, x: f(A.maxCap) }))}</div>${chart}
+      <table class="ntab ztab"><thead><tr><th>${t("sz_c_cap")}</th><th>${t("kp_auto")}</th><th class="nc">${t("sz_c_imp")}</th><th>${t("sz_c_gain")}</th><th class="nc">${t("sz_c_cost")}</th><th>${t("sz_c_pay")}</th></tr></thead><tbody>${rows}</tbody></table>`;
+  },
+
+  _szPvHtml(A) {
+    const t = (k, v) => this._t(k, v), f = (v, d = 0) => this._f(v, d), e = fsEsc;
+    const si = fsClamp(this._szSize - 1, 0, A.sizes.length - 1);
+    const yrs = (p) => (isFinite(p) && p < 40 ? f(p, p < 10 ? 1 : 0) : "> 40");
+    const best = A.bestPv;
+    const rows = A.orients.map((o) => {
+      const x = A.pv[o.id][si];
+      const isB = best && best.value > 0 && best.o === o.id && best.kwp === x.kwp;
+      return `<tr class="${isB ? "best" : ""}"><td>${e(t("sz_o")[o.id])}</td><td>${f(x.addY)} kWh</td><td>${f(x.selfAdd * 100)} %</td><td class="nc">+${f(x.dAuto, 1)} pt</td><td>+${f(x.gain)} €</td><td class="nc">${f(x.invest)} €</td><td>${yrs(x.payback)}</td></tr>`;
+    }).join("");
+    const seg = `<div class="seg" role="group">${A.sizes.map((s, i) => `<button data-zsize="${i + 1}" aria-pressed="${si === i}">+${this._f(s, 1)} kWc</button>`).join("")}</div>`;
+    return `<div class="obar" style="margin:0 0 6px"><div><div class="ot">${t("sz_pv_title")}</div><div class="os" style="margin-bottom:0">${e(t("sz_pv_sub", { t: f(A.C.tilt_new) }))}</div></div>${seg}</div>
+      <table class="ntab ztab"><thead><tr><th>${t("sz_c_or")}</th><th>${t("sz_c_prod")}</th><th>${t("sz_c_selfadd")}</th><th class="nc">${t("kp_auto")}</th><th>${t("sz_c_gain")}</th><th class="nc">${t("sz_c_cost")}</th><th>${t("sz_c_pay")}</th></tr></thead><tbody>${rows}</tbody></table>
+      <div class="pnote" style="margin-top:6px">${e(A.C.mppt_used >= A.C.mppt_total ? t("sz_mppt_full") : t("sz_mppt_free"))}${A.clipH > 20 ? " " + e(t("sz_clip", { h: f(A.clipH * A.ann) })) : ""}</div>`;
+  },
+
+  _szComboHtml(A) {
+    const t = (k, v) => this._t(k, v), f = (v, d = 0) => this._f(v, d), e = fsEsc;
+    const best = A.bestAll && A.bestAll.value > 0 ? A.bestAll : null;
+    const yrs = (p) => (isFinite(p) && p < 40 ? f(p, p < 10 ? 1 : 0) : "> 40");
+    const head = `<tr><th>${t("sz_c_pvadd")}</th>${A.bat.map((b) => `<th>${f(b.cap)} kWh</th>`).join("")}</tr>`;
+    const body = A.combo.map((row, i) => `<tr><td>${i ? `+${this._f(A.sizes[i - 1], 1)} kWc` : t("sz_none")}</td>${row.map((x, j) => {
+      const cls = !i && !j ? "cur" : x === best ? "best" : x.payback <= 8 ? "good" : x.payback <= 12 ? "mid" : "";
+      return `<td class="${cls}" data-tip="${e(`${t("kp_auto")}: ${f(x.auto * 100, 1)} %\n${t("sz_c_gain")}: ${f(x.gain)} €/${t("sz_yr")}\n${t("sz_c_cost")}: ${f(x.invest || 0)} €\n${t("sz_c_pay")}: ${yrs(x.payback)}`)}"><b>${f(x.auto * 100)} %</b><small>${i || j ? `+${f(x.gain)} €` : t("sz_now")}</small></td>`;
+    }).join("")}</tr>`).join("");
+    return `<div class="ot">${t("sz_combo_title")}</div><div class="os">${e(t("sz_combo_sub", { o: t("sz_o")[A.comboO] }))}</div>
+      <div style="overflow-x:auto"><table class="ntab zmat"><thead>${head}</thead><tbody>${body}</tbody></table></div>
+      <div class="leg" style="margin-top:6px"><span><i style="background:rgba(61,220,132,.35)"></i>${t("sz_l_good")}</span><span><i style="background:rgba(255,197,49,.25)"></i>${t("sz_l_mid")}</span><span><i style="background:rgba(178,141,255,.45)"></i>${t("sz_l_best")}</span></div>`;
+  },
+
+  /* profil horaire moyen des mois les plus et les moins ensoleillés, avec la proposition PV */
+  _szProfHtml(A, w, which) {
+    const t = (k, v) => this._t(k, v), f = (v, d = 1) => this._f(v, d), H = A.H;
+    const mons = [...A.base.months.entries()].filter(([, m]) => m.load > 1).sort((a, b) => b[1].pv - a[1].pv);
+    if (mons.length < 2) return "";
+    const pick = new Set((which === "high" ? mons.slice(0, 3) : mons.slice(-3)).map(([k]) => k));
+    const P = A.refPv;
+    const add = A.addOf(A.orients.find((o) => o.id === P.o), P.kwp);
+    const acc = Array.from({ length: 24 }, () => ({ pv: 0, add: 0, load: 0, n: 0 }));
+    const dset = new Set();
+    for (let i = 0; i < H.n; i++) { if (!pick.has(H.mon[i])) continue; const h = new Date(H.t[i]).getHours(); acc[h].pv += H.pv[i]; acc[h].add += add[i]; acc[h].load += H.load[i] - H.ev[i]; dset.add(H.day[i]); }
+    const nd = Math.max(dset.size, 1);
+    const pts = acc.map((a) => ({ pv: a.pv / nd, add: a.add / nd, load: a.load / nd }));
+    const ymax = Math.max(0.3, ...pts.map((p) => Math.max(p.pv + p.add, p.load))) * 1.12;
+    const names = [...pick].sort((a, b) => a - b).map((m) => new Date(2026, m, 1).toLocaleDateString(this._lang(), { month: "short" })).join(", ");
+    const chart = fsPlot({
+      w, h: 200, aria: t(`sz_prof_${which}`), x: { cats: pts.map((_, h) => (h % 3 === 0 ? this._hh(h) : "")), maxLabels: 24, labelW: 30 },
+      y: { min: 0, max: ymax, label: t("y_kwh_h"), fmt: (v) => f(v, 1) },
+      layers: ({ sx, sy, bw, y0, m, ph }) => {
+        let s = "";
+        pts.forEach((p, h) => {
+          const tip = `${this._hh(h)}\n${t("sz_l_pvnow")}: ${f(p.pv, 2)} kWh\n${t("sz_l_pvadd", { o: t("sz_o")[P.o], k: this._f(P.kwp, 1) })}: ${f(p.add, 2)} kWh\n${t("fc_load")}: ${f(p.load, 2)} kWh`;
+          s += `<rect class="col" x="${sx(h) - bw / 2}" y="${m.t}" width="${bw}" height="${ph}" fill="transparent" data-tip="${fsEsc(tip)}"/>`;
+          s += fsRect(sx(h) - (bw - 3) / 2, sy(p.pv), y0, bw - 3, FS_SER.pv, tip, p.add > 0.005 ? null : "top");
+          if (p.add > 0.005) s += fsRect(sx(h) - (bw - 3) / 2, sy(p.pv + p.add), sy(p.pv), bw - 3, "#ffe08a", tip, "top");
+        });
+        s += `<path d="${fsPath(pts.map((p, h) => [sx(h), sy(p.load)]))}" fill="none" stroke="${FS_SER.home}" stroke-width="2.2" pointer-events="none"/>`;
+        return s;
+      },
+    });
+    const leg = `<div class="leg"><span><i style="background:${FS_SER.pv}"></i>${t("sz_l_pvnow")}</span><span><i style="background:#ffe08a"></i>${fsEsc(t("sz_l_pvadd", { o: t("sz_o")[P.o], k: this._f(P.kwp, 1) }))}</span><span><i class="ln" style="background:${FS_SER.home}"></i>${t("sz_l_house")}</span></div>`;
+    return `<div class="ot">${t(`sz_prof_${which}`)}</div><div class="os">${fsEsc(t("sz_prof_sub", { m: names }))}</div>${leg}${chart}`;
+  },
+
+  _szMonthHtml(A, w) {
+    const t = (k, v) => this._t(k, v), f = (v, d = 0) => this._f(v, d);
+    const X = A.bestAll && A.bestAll.value > 0 ? A.bestAll : null;
+    const m0 = (new Date(A.t1).getMonth() + 1) % 12;
+    const ms = [...A.base.months.entries()].sort((a, b) => ((a[0] - m0 + 12) % 12) - ((b[0] - m0 + 12) % 12)).filter(([, m]) => m.load > 1);
+    if (ms.length < 2) return "";
+    const alt = X ? X.r.months : null;
+    const cats = ms.map(([k]) => new Date(2026, k, 1).toLocaleDateString(this._lang(), { month: "short" }));
+    const chart = fsPlot({
+      w, h: 210, aria: t("sz_month_title"), x: { cats, maxLabels: 13 },
+      y: { min: 0, max: 100, n: 4, fmt: (v) => `${v}%` },
+      layers: ({ sx, sy, bw, y0 }) => ms.map(([k, m], i) => {
+        const a = (1 - m.imp / m.load) * 100, mb = alt && alt.get(k), b = mb ? (1 - mb.imp / mb.load) * 100 : null;
+        const wB = Math.min(18, bw * 0.36);
+        const tip = `${cats[i]}\n${t("sz_l_now")}: ${f(a)} %${b != null ? `\n${t("sz_l_prop")}: ${f(b)} %` : ""}`;
+        return fsRect(sx(i) - wB - 1, sy(a), y0, wB, FS_SER.neutral, tip, "top") + (b != null ? fsRect(sx(i) + 1, sy(b), y0, wB, FS_SER.bat, tip, "top") : "");
+      }).join(""),
+    });
+    const lbl = X ? (X.kwp && X.cap && X.cap > A.C.bat_kwh ? t("sz_p_combo_v", { k: this._f(X.kwp, 1), o: t("sz_o")[X.o], c: f(X.cap) }) : X.kwp ? t("sz_p_pv_v", { k: this._f(X.kwp, 1), o: t("sz_o")[X.o] }) : t("sz_p_bat_v", { c: f(X.cap), d: f(X.cap - A.C.bat_kwh) })) : "";
+    const leg = `<div class="leg"><span><i style="background:${FS_SER.neutral}"></i>${t("sz_l_now")}</span>${X ? `<span><i style="background:${FS_SER.bat}"></i>${fsEsc(lbl)}</span>` : ""}</div>`;
+    return `<div class="ot">${t("sz_month_title")}</div><div class="os">${t("sz_month_sub")}</div>${leg}${chart}`;
+  },
+};
+
+Object.assign(FusionSolarCard.prototype, FsPaneMixin, FsOptMixin, FsRecMixin, FsPilotMixin, FsSizeMixin);
 
 /* ------------------------------------------------------------------------------------------ */
 /*  Version smartphone : schéma portrait, onglets et graphiques sur une colonne               */

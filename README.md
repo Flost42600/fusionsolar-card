@@ -73,6 +73,21 @@ Day, week, month or year, with ◀ ▶ navigation: production, consumption, self
 
 ![Summary](images/recap.png)
 
+## Installation tab (upgrade planning)
+
+Suggests upgrades that fit **your** installation, from the last 12 months of hourly statistics:
+
+- **Your installation**: PV strings (peak power, orientation, tilt), inverter (model read from Home Assistant, AC power, MPPT inputs), battery (capacity, power, modules per stack). Everything can be edited in the tab (*Edit installation*); without a peak power, the card estimates it from your sunniest days. Settings stay in the browser and can be copied as YAML into the card's `installation:` option.
+- **Summary**: yearly production and consumption, self-consumption, self-sufficiency, grid bill, battery cycles, days with a full or empty battery.
+- **Suggestions**: storage (keep the capacity or add modules), panels (best orientation and size), both combined when that does better, and what shifting usage to the surplus saves without investing.
+- **Storage: what capacity?**: hour-by-hour simulation of every possible capacity (5 kWh modules, 3 per stack, 2 stacks for a LUNA2000-S0) with self-sufficiency, purchases, yearly gain, cost and payback.
+- **Panels: which orientation?**: East-West, East, West, South and South at 60° tilt (winter production), for three added sizes.
+- Panels × storage **combinations**, **typical days** (sunny and dark months) and **self-sufficiency by month**.
+
+Method: added panels follow your actual production each day (same weather), spread along the sun's path at your location for the chosen orientation. The battery is simulated in pure self-consumption with its measured efficiency. An option is kept if it pays back within 60% of its lifetime. Peak/off-peak prices, feed-in price and costs per kWp and kWh are set in the tab. This is an order of magnitude to compare options, not an installer's study.
+
+![Installation](images/installation.png)
+
 ## Installation
 
 **HACS**: HACS → ⋮ → **Custom repositories** → `https://github.com/Flost42600/fusionsolar-card`, category **Dashboard** → **FusionSolar Card** → Download, then reload your browser.
@@ -106,7 +121,7 @@ type: custom:fusionsolar-mini-card
 navigation_path: /lovelace/energy   # optional
 ```
 
-Other options: `show_pilot` (Plan and Control tabs), `layout` (auto, wide, tall), `optimization_days` (7, 14, 30), `pv1_peak` / `pv2_peak` (W, glow intensity), `heatpump_min_power`, `grid_invert`, `battery_invert`, `show_header`, `show_stats`, `show_optimization`, `show_recap`, `language` (fr, en).
+Other options: `show_pilot` (Plan and Control tabs), `show_sizing` (Installation tab), `installation` (installation description, see the tab), `layout` (auto, wide, tall), `optimization_days` (7, 14, 30), `pv1_peak` / `pv2_peak` (W, glow intensity), `heatpump_min_power`, `grid_invert`, `battery_invert`, `show_header`, `show_stats`, `show_optimization`, `show_recap`, `language` (fr, en).
 
 ### Conventions and entities
 

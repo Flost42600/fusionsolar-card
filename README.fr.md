@@ -72,6 +72,21 @@ Jour, semaine, mois ou année, avec navigation ◀ ▶ : production, consommatio
 
 ![Récap](images/recap.png)
 
+## Onglet Installation (évolution de l'installation)
+
+Propose des évolutions cohérentes avec **ton** installation, à partir de tes 12 derniers mois de statistiques horaires :
+
+- **Ton installation** : strings PV (puissance crête, orientation, inclinaison), onduleur (modèle lu dans Home Assistant, puissance AC, entrées MPPT), batterie (capacité, puissance, modules par pile). Tout se modifie dans l'onglet (bouton *Modifier l'installation*) ; sans puissance crête renseignée, la carte l'estime d'après tes journées les plus ensoleillées. Les réglages restent dans le navigateur et peuvent être copiés en YAML dans l'option `installation:` de la carte.
+- **Bilan** : production et consommation annuelles, autoconsommation, autosuffisance, facture réseau, cycles batterie, jours batterie pleine ou vide.
+- **Propositions** : stockage (garder la capacité ou ajouter des modules), panneaux (meilleure orientation et puissance), combinaison des deux si elle fait mieux, et ce qu'on peut gagner sans investir en déplaçant les usages vers le surplus.
+- **Stockage : quelle capacité ?** : simulation heure par heure de chaque capacité possible (modules de 5 kWh, 3 par pile, 2 piles pour une LUNA2000-S0), avec autosuffisance, achats, gain annuel, coût et retour.
+- **Panneaux : quelle orientation ?** : Est-Ouest, Est, Ouest, Sud et Sud incliné à 60° (production d'hiver), pour trois puissances ajoutées.
+- **Combinaisons** panneaux × stockage, **journées types** (mois ensoleillés et sombres) et **autosuffisance par mois**.
+
+Méthode : la production des panneaux ajoutés suit ta production réelle de chaque journée (même météo), répartie selon la course du soleil à ta position pour l'orientation choisie. La batterie est simulée en autoconsommation pure avec le rendement mesuré. Une option est retenue si elle se rembourse en moins de 60 % de sa durée de vie. Prix d'achat HP/HC, revente, coûts au kWc et au kWh se règlent dans l'onglet. C'est un ordre de grandeur pour comparer les options, pas une étude d'installateur.
+
+![Installation](images/installation.png)
+
 ## Installation
 
 **HACS** : HACS → ⋮ → **Dépôts personnalisés** → `https://github.com/Flost42600/fusionsolar-card`, catégorie **Tableau de bord** → **FusionSolar Card** → Télécharger, puis recharger le navigateur.
@@ -105,7 +120,7 @@ type: custom:fusionsolar-mini-card
 navigation_path: /lovelace/energie   # optionnel
 ```
 
-Autres options : `show_pilot`, `layout` (auto, wide, tall), `optimization_days` (7, 14, 30), `pv1_peak` / `pv2_peak` (W, intensité du halo), `heatpump_min_power`, `grid_invert`, `battery_invert`, `show_header`, `show_stats`, `show_optimization`, `show_recap`, `language` (fr, en).
+Autres options : `show_pilot` (onglets Plan et Pilotage), `show_sizing` (onglet Installation), `installation` (description de l'installation, voir l'onglet), `layout` (auto, wide, tall), `optimization_days` (7, 14, 30), `pv1_peak` / `pv2_peak` (W, intensité du halo), `heatpump_min_power`, `grid_invert`, `battery_invert`, `show_header`, `show_stats`, `show_optimization`, `show_recap`, `language` (fr, en).
 
 ### Conventions et entités
 
